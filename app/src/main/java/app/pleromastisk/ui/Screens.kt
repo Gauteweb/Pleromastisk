@@ -1,0 +1,419 @@
+package app.pleromastisk.ui
+
+import android.content.Context
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabColorSchemeParams
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.pleromastisk.R
+import app.pleromastisk.data.Account
+import app.pleromastisk.data.Notification
+import app.pleromastisk.relativeTime
+import app.pleromastisk.vm.AccountViewModel
+import app.pleromastisk.vm.AuthViewModel
+import app.pleromastisk.vm.NotificationsViewModel
+import app.pleromastisk.vm.PagedStatusViewModel
+import app.pleromastisk.vm.ThreadViewModel
+import coil.compose.AsyncImage
+
+// ---------------------------------------------------------------- Innlogging
+
+private fun openCustomTab(context: Context, url: String) {
+    val tabs = CustomTabsIntent.Builder()
+        .setDefaultColorSchemeParams(
+            CustomTabColorSchemeParams.Builder().setToolbarColor(PT.Fg.toArgb()).build(),
+        )
+        .build()
+    tabs.launchUrl(context, Uri.parse(url))
+}
+
+@Composable
+fun LoginScreen(auth: AuthViewModel) {
+    val state by auth.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var host by rememberSaveable { mutableStateOf("social.gaute.space") }
+    val submit = { auth.login(host) { url -> openCustomTab(context, url) } }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Panel {
+            Column(Modifier.padding(20.dp)) {
+                Text(
+                    stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = PT.TopBarText, fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(stringResource(R.string.login_intro), color = PT.Text)
+                Spacer(Modifier.height(18.dp))
+                OutlinedTextField(
+                    value = host,
+                    onValueChange = { host = it },
+                    label = { Text(stringResource(R.string.instance_label)) },
+                    singleLine = true,
+                    shape = RectangleShape,
+                    colors = ptFieldColors(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(onGo = { if (host.isNotBlank() && !state.busy) submit() }),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                state.error?.let {
+                    Spacer(Modifier.height(10.dp))
+                    Text(it, color = PT.Orange)
+                }
+                Spacer(Modifier.height(18.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PButton(
+                        stringResource(R.string.login_button),
+                        onClick = { submit() },
+                        enabled = host.isNotBlank() && !state.busy,
+                        filled = true,
+                    )
+                    if (state.busy) {
+                        Spacer(Modifier.width(14.dp))
+                        CircularProgressIndicator(Modifier.size(24.dp), color = PT.Link, strokeWidth = 2.dp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- Lister
+
+@Composable
+fun ErrorPanel(message: String, onRetry: () -> Unit) {
+    Panel(borderColor = PT.Red) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(message, color = PT.Text)
+            PButton(stringResource(R.string.retry), onRetry)
+        }
+    }
+}
+
+@Composable
+private fun LoadingRow() {
+    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(Modifier.size(28.dp), color = PT.Link, strokeWidth = 2.dp)
+    }
+}
+
+/** Tidslinje/profil-liste med pull-to-refresh og automatisk «hent flere». */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StatusFeed(
+    vm: PagedStatusViewModel,
+    actions: StatusActions,
+    modifier: Modifier = Modifier,
+    header: (LazyListScope.() -> Unit)? = null,
+) {
+    val items by vm.items.collectAsStateWithLifecycle()
+    val paging by vm.paging.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(vm) { vm.ensureLoaded() }
+    val nearEnd by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()?.index ?: 0
+            info.totalItemsCount > 0 && last >= info.totalItemsCount - 4
+        }
+    }
+    LaunchedEffect(nearEnd, items.size) { if (nearEnd && items.isNotEmpty()) vm.loadMore() }
+
+    PullToRefreshBox(isRefreshing = paging.refreshing, onRefresh = { vm.refresh() }, modifier = modifier) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            header?.invoke(this)
+            if (paging.error != null && items.isEmpty()) {
+                item { ErrorPanel(paging.error ?: "", onRetry = { vm.refresh() }) }
+            } else if (items.isEmpty() && !paging.refreshing) {
+                item { Panel { Text(stringResource(R.string.empty_timeline), Modifier.padding(14.dp), color = PT.Text) } }
+            }
+            items(items, key = { it.id }) { StatusCard(it, actions) }
+            if (paging.loading) item { LoadingRow() }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- Tråd
+
+@Composable
+fun ThreadScreen(statusId: String, vm: ThreadViewModel, actions: StatusActions, modifier: Modifier = Modifier) {
+    val items by vm.items.collectAsStateWithLifecycle()
+    val loading by vm.loading.collectAsStateWithLifecycle()
+    val error by vm.error.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    var scrolled by remember { mutableStateOf(false) }
+
+    LaunchedEffect(vm) { vm.load() }
+    LaunchedEffect(items.size) {
+        if (!scrolled && items.isNotEmpty()) {
+            val index = items.indexOfFirst { (it.reblog ?: it).id == statusId }
+            if (index > 0) listState.scrollToItem(index)
+            scrolled = true
+        }
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (error != null && items.isEmpty()) item { ErrorPanel(error ?: "", onRetry = { vm.reload() }) }
+        items(items, key = { it.id }) { s ->
+            val isFocus = (s.reblog ?: s).id == statusId
+            StatusCard(s, actions, highlighted = isFocus, clickable = !isFocus)
+        }
+        if (loading) item { LoadingRow() }
+    }
+}
+
+// ---------------------------------------------------------------- Varsler
+
+@Composable
+private fun notificationText(n: Notification): String {
+    val name = n.account.name
+    return when (n.type) {
+        "mention" -> stringResource(R.string.notif_mention, name)
+        "reblog" -> stringResource(R.string.notif_reblog, name)
+        "favourite" -> stringResource(R.string.notif_favourite, name)
+        "follow" -> stringResource(R.string.notif_follow, name)
+        "follow_request" -> stringResource(R.string.notif_follow_request, name)
+        "poll" -> stringResource(R.string.notif_poll)
+        "status" -> stringResource(R.string.notif_status, name)
+        "update" -> stringResource(R.string.notif_update, name)
+        "pleroma:emoji_reaction" -> stringResource(R.string.notif_reaction, name, n.emoji ?: "")
+        else -> stringResource(R.string.notif_other, name, n.type)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NotificationsScreen(
+    vm: NotificationsViewModel,
+    onOpenStatus: (String) -> Unit,
+    onOpenProfile: (Account) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val items by vm.items.collectAsStateWithLifecycle()
+    val paging by vm.paging.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(vm) { vm.ensureLoaded() }
+    val nearEnd by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()?.index ?: 0
+            info.totalItemsCount > 0 && last >= info.totalItemsCount - 4
+        }
+    }
+    LaunchedEffect(nearEnd, items.size) { if (nearEnd && items.isNotEmpty()) vm.loadMore() }
+
+    PullToRefreshBox(isRefreshing = paging.refreshing, onRefresh = { vm.refresh() }, modifier = modifier) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (paging.error != null && items.isEmpty()) {
+                item { ErrorPanel(paging.error ?: "", onRetry = { vm.refresh() }) }
+            } else if (items.isEmpty() && !paging.refreshing) {
+                item { Panel { Text(stringResource(R.string.empty_notifications), Modifier.padding(14.dp), color = PT.Text) } }
+            }
+            items(items, key = { it.id }) { n ->
+                val target = (n.status?.reblog ?: n.status)
+                Panel(
+                    Modifier.clickable {
+                        if (target != null) onOpenStatus(target.id) else onOpenProfile(n.account)
+                    },
+                ) {
+                    Column(Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Avatar(n.account.avatar, 36, Modifier.clickable { onOpenProfile(n.account) })
+                            Spacer(Modifier.width(10.dp))
+                            Icon(
+                                when (n.type) {
+                                    "reblog" -> Icons.Filled.Repeat
+                                    "favourite" -> Icons.Filled.Star
+                                    "pleroma:emoji_reaction" -> Icons.Filled.Favorite
+                                    else -> Icons.Filled.Person
+                                },
+                                null,
+                                tint = when (n.type) {
+                                    "reblog" -> PT.Green
+                                    "favourite" -> PT.Orange
+                                    "pleroma:emoji_reaction" -> PT.Red
+                                    else -> PT.Blue
+                                },
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            EmojiText(
+                                notificationText(n), n.account.emojis, Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyMedium, color = PT.Text, maxLines = 2,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(relativeTime(n.createdAt), style = MaterialTheme.typography.bodySmall, color = PT.Muted)
+                        }
+                        if (target != null && target.content.isNotBlank() && n.type != "poll") {
+                            Spacer(Modifier.height(8.dp))
+                            RichText(
+                                target.content, target.emojis,
+                                style = MaterialTheme.typography.bodySmall, color = PT.Muted, maxLines = 4,
+                            )
+                        }
+                    }
+                }
+            }
+            if (paging.loading) item { LoadingRow() }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- Profil
+
+@Composable
+fun AccountScreen(
+    accountId: String,
+    isMe: Boolean,
+    vm: AccountViewModel,
+    actions: StatusActions,
+    onLogout: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val account by vm.account.collectAsStateWithLifecycle()
+    val relationship by vm.relationship.collectAsStateWithLifecycle()
+    LaunchedEffect(accountId) { vm.loadHeader(isMe) }
+
+    StatusFeed(vm, actions, modifier, header = {
+        item {
+            account?.let { a ->
+                Panel {
+                    if (a.header.isNotBlank()) {
+                        AsyncImage(
+                            model = a.header, contentDescription = null, contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(120.dp).background(PT.Fg),
+                        )
+                    }
+                    Column(Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Avatar(a.avatar, 64)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                EmojiText(
+                                    a.name, a.emojis,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = PT.Text, fontWeight = FontWeight.Bold,
+                                )
+                                Text("@" + a.acct, color = PT.Muted, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        if (a.note.isNotBlank()) {
+                            Spacer(Modifier.height(10.dp))
+                            RichText(a.note, a.emojis, style = MaterialTheme.typography.bodyMedium, color = PT.Text)
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                            Counter(a.statusesCount, stringResource(R.string.profile_posts))
+                            Counter(a.followingCount, stringResource(R.string.profile_following))
+                            Counter(a.followersCount, stringResource(R.string.profile_followers))
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        if (isMe) {
+                            PButton(stringResource(R.string.logout), onLogout)
+                        } else {
+                            val r = relationship
+                            val label = when {
+                                r?.following == true -> R.string.profile_unfollow
+                                r?.requested == true -> R.string.profile_requested
+                                else -> R.string.profile_follow
+                            }
+                            PButton(
+                                stringResource(label), { vm.toggleFollow() },
+                                enabled = r != null, filled = r?.following != true && r?.requested != true,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    })
+}
+
+@Composable
+private fun Counter(value: Int, label: String) {
+    Column {
+        Text(value.toString(), color = PT.Text, fontWeight = FontWeight.Bold)
+        Text(label, color = PT.Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}

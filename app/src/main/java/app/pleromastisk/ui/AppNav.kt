@@ -1,0 +1,475 @@
+package app.pleromastisk.ui
+
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import app.pleromastisk.R
+import app.pleromastisk.data.MastoList
+import app.pleromastisk.data.MediaAttachment
+import app.pleromastisk.data.Status
+import app.pleromastisk.data.TimelineKind
+import app.pleromastisk.vm.AccountViewModel
+import app.pleromastisk.vm.AuthState
+import app.pleromastisk.vm.AuthViewModel
+import app.pleromastisk.vm.ListTimelineViewModel
+import app.pleromastisk.vm.ListsViewModel
+import app.pleromastisk.vm.NotificationsViewModel
+import app.pleromastisk.vm.PagedStatusViewModel
+import app.pleromastisk.vm.StatusListViewModel
+import app.pleromastisk.vm.ThreadViewModel
+import app.pleromastisk.vm.TimelineViewModel
+
+private const val HOME = "home"
+private const val LOCAL = "local"
+private const val FEDERATED = "federated"
+private const val NOTIFICATIONS = "notifications"
+private const val PROFILE = "profile"
+private const val COMPOSE_BASE = "compose"
+private const val COMPOSE =
+    "compose?replyId={replyId}&replyMentions={replyMentions}&replyVis={replyVis}&editId={editId}"
+
+private val TopLevel = setOf(HOME, LOCAL, FEDERATED, NOTIFICATIONS, PROFILE)
+
+@Composable
+fun PleromastiskRoot(auth: AuthViewModel) {
+    val state by auth.state.collectAsStateWithLifecycle()
+    var viewer by remember { mutableStateOf<Pair<List<MediaAttachment>, Int>?>(null) }
+    CompositionLocalProvider(LocalImageViewer provides { images, index -> viewer = images to index }) {
+        Box(Modifier.fillMaxSize()) {
+            if (!state.loggedIn) LoginScreen(auth) else MainScaffold(auth, state)
+            // Bildevisningen ligger øverst, over alt annet (også bunnlinjen)
+            viewer?.let { (images, index) -> ImageViewer(images, index) { viewer = null } }
+        }
+    }
+}
+
+@Composable
+private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
+    val nav = rememberNavController()
+    val entry by nav.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    val showChrome = route != null && !route.startsWith(COMPOSE_BASE)
+    val me = state.me
+
+    // Valgt liste i «Hjem» (null = vanlig hjemmetidslinje)
+    val listsVm: ListsViewModel = viewModel()
+    val lists by listsVm.lists.collectAsStateWithLifecycle()
+    var selectedListId by rememberSaveable { mutableStateOf<String?>(null) }
+    var showAbout by rememberSaveable { mutableStateOf(false) }
+    val selectedList = lists.firstOrNull { it.id == selectedListId }
+
+    fun go(target: String) = nav.navigate(target) {
+        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+
+    fun actionsFor(vm: StatusListViewModel) = StatusActions(
+        myId = me?.id,
+        onOpenStatus = { nav.navigate("thread/${it.id}") },
+        onOpenProfile = { nav.navigate("account/${it.id}") },
+        onReply = { s -> nav.navigate(replyRoute(s, me?.acct)) },
+        onBoost = vm::toggleBoost,
+        onFavourite = vm::toggleFavourite,
+        onBookmark = vm::toggleBookmark,
+        onVote = vm::vote,
+        onDelete = vm::delete,
+        canEdit = state.canEdit,
+        onEdit = { nav.navigate("compose?editId=${Uri.encode(it.id)}") },
+    )
+
+    if (showAbout) AboutDialog(onDismiss = { showAbout = false })
+
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            if (showChrome) {
+                PTopBar(
+                    title = if (route == HOME && selectedList != null) selectedList.title else titleFor(route),
+                    onBack = if (route in TopLevel) null else ({ nav.popBackStack() }),
+                    titleContent = if (route == HOME) { title ->
+                        ListMenuTitle(
+                            title = title,
+                            lists = lists,
+                            selectedId = selectedListId,
+                            onOpen = { listsVm.refresh() },
+                            onSelect = { selectedListId = it },
+                        )
+                    } else null,
+                    actions = {
+                        if (route == HOME) {
+                            IconButton(onClick = { showAbout = true }) {
+                                Icon(Icons.Filled.Info, stringResource(R.string.about_button), tint = PT.TopBarText)
+                            }
+                        }
+                    },
+                )
+            }
+        },
+        // Navigasjonsknapper og «skriv»-knappen ligger alltid nederst på siden.
+        bottomBar = { if (showChrome) PBottomBar(route, onNavigate = ::go, onCompose = { nav.navigate(COMPOSE_BASE) }) },
+    ) { pad ->
+        NavHost(
+            navController = nav,
+            startDestination = HOME,
+            modifier = if (showChrome) Modifier.padding(pad) else Modifier,
+        ) {
+            composable(HOME) {
+                val listId = selectedListId
+                val vm: PagedStatusViewModel = if (listId == null) {
+                    viewModel<TimelineViewModel>(
+                        key = "tl_$HOME",
+                        factory = viewModelFactory { initializer { TimelineViewModel(TimelineKind.HOME) } },
+                    )
+                } else {
+                    viewModel<ListTimelineViewModel>(
+                        key = "list_$listId",
+                        factory = viewModelFactory { initializer { ListTimelineViewModel(listId) } },
+                    )
+                }
+                StatusFeed(vm, actionsFor(vm))
+            }
+            for ((r, kind) in listOf(LOCAL to TimelineKind.LOCAL, FEDERATED to TimelineKind.FEDERATED)) {
+                composable(r) {
+                    val vm: TimelineViewModel = viewModel(
+                        key = "tl_$r",
+                        factory = viewModelFactory { initializer { TimelineViewModel(kind) } },
+                    )
+                    StatusFeed(vm, actionsFor(vm))
+                }
+            }
+            composable(NOTIFICATIONS) {
+                val vm: NotificationsViewModel = viewModel()
+                NotificationsScreen(
+                    vm,
+                    onOpenStatus = { nav.navigate("thread/$it") },
+                    onOpenProfile = { nav.navigate("account/${it.id}") },
+                )
+            }
+            composable(PROFILE) {
+                if (me == null) {
+                    Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        androidx.compose.material3.CircularProgressIndicator(color = PT.Link)
+                    }
+                } else {
+                    val vm: AccountViewModel = viewModel(
+                        key = "me_${me.id}",
+                        factory = viewModelFactory { initializer { AccountViewModel(me.id) } },
+                    )
+                    AccountScreen(me.id, true, vm, actionsFor(vm), onLogout = { auth.logout() })
+                }
+            }
+            composable("account/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
+                val id = e.arguments?.getString("id").orEmpty()
+                val vm: AccountViewModel = viewModel(
+                    key = "acc_$id",
+                    factory = viewModelFactory { initializer { AccountViewModel(id) } },
+                )
+                AccountScreen(id, id == me?.id, vm, actionsFor(vm), onLogout = { auth.logout() })
+            }
+            composable("thread/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
+                val id = e.arguments?.getString("id").orEmpty()
+                val vm: ThreadViewModel = viewModel(
+                    key = "thr_$id",
+                    factory = viewModelFactory { initializer { ThreadViewModel(id) } },
+                )
+                ThreadScreen(id, vm, actionsFor(vm))
+            }
+            composable(
+                COMPOSE,
+                arguments = listOf(
+                    navArgument("replyId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("replyMentions") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("replyVis") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("editId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                ),
+            ) { e ->
+                ComposeScreen(
+                    replyId = e.arguments?.getString("replyId"),
+                    replyMentions = e.arguments?.getString("replyMentions"),
+                    replyVisibility = e.arguments?.getString("replyVis"),
+                    editId = e.arguments?.getString("editId"),
+                    maxChars = state.maxChars,
+                    altLimit = state.altLimit,
+                    postFormats = state.postFormats,
+                    onClose = { nav.popBackStack() },
+                )
+            }
+        }
+    }
+}
+
+private fun replyRoute(s: Status, myAcct: String?): String {
+    val handles = (listOf(s.account.acct) + s.mentions.map { it.acct })
+        .filter { it.isNotBlank() && it != myAcct }
+        .distinct()
+        .joinToString(" ")
+    return "compose?replyId=${Uri.encode(s.id)}&replyMentions=${Uri.encode(handles)}&replyVis=${Uri.encode(s.visibility)}"
+}
+
+@Composable
+private fun titleFor(route: String?): String = stringResource(
+    when {
+        route == HOME -> R.string.title_home
+        route == LOCAL -> R.string.title_local
+        route == FEDERATED -> R.string.title_federated
+        route == NOTIFICATIONS -> R.string.title_notifications
+        route == PROFILE -> R.string.title_profile
+        route?.startsWith("thread") == true -> R.string.title_thread
+        else -> R.string.title_account
+    },
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PTopBar(
+    title: String,
+    onBack: (() -> Unit)?,
+    titleContent: (@Composable (String) -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    Column {
+        TopAppBar(
+            title = {
+                if (titleContent != null) titleContent(title)
+                else Text(title, color = PT.TopBarText, fontWeight = FontWeight.Bold)
+            },
+            navigationIcon = {
+                if (onBack != null) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), tint = PT.TopBarText)
+                    }
+                }
+            },
+            actions = actions,
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = PT.TopBar),
+        )
+        HorizontalDivider(color = PT.Border)
+    }
+}
+
+/** Bunnlinje: Hjem · Lokalt · Fødererte · [Skriv] · Varsler · Profil */
+@Composable
+private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: () -> Unit) {
+    Column(Modifier.fillMaxWidth().background(PT.TopBar)) {
+        HorizontalDivider(color = PT.Border)
+        Row(
+            Modifier.fillMaxWidth().navigationBarsPadding().height(58.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NavItem(Icons.Filled.Home, R.string.nav_home, route == HOME) { onNavigate(HOME) }
+            NavItem(Icons.Filled.People, R.string.nav_local, route == LOCAL) { onNavigate(LOCAL) }
+            NavItem(Icons.Filled.Public, R.string.nav_federated, route == FEDERATED) { onNavigate(FEDERATED) }
+            // «Skriv nytt innlegg»: fremhevet knapp midt i linjen
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .size(46.dp)
+                        .background(PT.Link)
+                        .border(1.dp, PT.Border)
+                        .clickable(onClick = onCompose),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Edit, stringResource(R.string.nav_compose), tint = PT.Fg)
+                }
+            }
+            NavItem(Icons.Filled.Notifications, R.string.nav_notifications, route == NOTIFICATIONS) { onNavigate(NOTIFICATIONS) }
+            NavItem(Icons.Filled.Person, R.string.nav_profile, route == PROFILE) { onNavigate(PROFILE) }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.NavItem(icon: ImageVector, label: Int, selected: Boolean, onClick: () -> Unit) {
+    val tint = if (selected) PT.TopBarText else PT.Link
+    Column(
+        Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .height(58.dp)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+    ) {
+        Icon(icon, stringResource(label), tint = tint, modifier = Modifier.size(24.dp))
+        Text(stringResource(label), color = tint, fontSize = 10.sp, maxLines = 1)
+    }
+}
+
+/** «Hjem ▾» – trykk for å bytte mellom hjemmetidslinjen og egne lister. */
+@Composable
+private fun ListMenuTitle(
+    title: String,
+    lists: List<MastoList>,
+    selectedId: String?,
+    onOpen: () -> Unit,
+    onSelect: (String?) -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        Row(
+            Modifier
+                .clickable { open = true; onOpen() }
+                .padding(vertical = 8.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, color = PT.TopBarText, fontWeight = FontWeight.Bold, maxLines = 1)
+            Icon(
+                Icons.Filled.ArrowDropDown, stringResource(R.string.lists_choose),
+                tint = PT.TopBarText,
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        stringResource(R.string.title_home),
+                        color = if (selectedId == null) PT.TopBarText else PT.FgText,
+                        fontWeight = if (selectedId == null) FontWeight.Bold else FontWeight.Normal,
+                    )
+                },
+                leadingIcon = { Icon(Icons.Filled.Home, null, tint = PT.Link) },
+                onClick = { open = false; onSelect(null) },
+            )
+            HorizontalDivider(color = PT.Border.copy(alpha = 0.5f))
+            DropdownMenuItem(
+                enabled = false,
+                text = { Text(stringResource(R.string.lists_header), color = PT.Muted, fontSize = 12.sp) },
+                onClick = {},
+            )
+            if (lists.isEmpty()) {
+                DropdownMenuItem(
+                    enabled = false,
+                    text = { Text(stringResource(R.string.lists_none), color = PT.Muted) },
+                    onClick = {},
+                )
+            }
+            lists.forEach { l ->
+                val selected = l.id == selectedId
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            l.title,
+                            color = if (selected) PT.TopBarText else PT.FgText,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, null, tint = PT.Link) },
+                    onClick = { open = false; onSelect(l.id) },
+                )
+            }
+        }
+    }
+}
+
+private const val REPO_URL = "https://gaute.space/forgejo/gaute/Pleromastisk"
+
+/** Infoboks som åpnes fra info-ikonet øverst til høyre på «Hjem». */
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.border(1.dp, PT.Border),
+        containerColor = PT.Fg,
+        title = {
+            Text(stringResource(R.string.about_title), color = PT.TopBarText, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+            ) {
+                Text(stringResource(R.string.about_p1), color = PT.Text)
+                Text(stringResource(R.string.about_p2), color = PT.Text)
+                Text(
+                    buildAnnotatedString {
+                        append(stringResource(R.string.about_p3))
+                        append(" ")
+                        withLink(
+                            LinkAnnotation.Url(
+                                REPO_URL,
+                                TextLinkStyles(SpanStyle(color = PT.Link, textDecoration = TextDecoration.Underline)),
+                            ),
+                        ) { append(REPO_URL) }
+                    },
+                    color = PT.Text,
+                )
+                Text(stringResource(R.string.about_p4), color = PT.Text)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.about_close), color = PT.Link)
+            }
+        },
+    )
+}
