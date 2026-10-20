@@ -12,6 +12,12 @@ andre Pleroma-instanser (og i prinsippet andre tjenere med Mastodon-kompatibelt 
 > social.gaute.space, men appen er ennå ikke systematisk testet på fysiske enheter.
 > Forvent rare kanter, og meld gjerne fra om feil.
 
+## Skjermbilder
+
+Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per nå kun for Android.
+
+![Eksempler](Pleromastisk_screenshots.jpg)
+
 ## Funksjoner
 
 - **Innlogging via OAuth** – du skriver inn instansadresse og godkjenner appen på instansens
