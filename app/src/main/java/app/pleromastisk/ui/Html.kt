@@ -13,6 +13,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -39,6 +40,7 @@ fun htmlToRich(
     html: String,
     emojis: List<Emoji>,
     linkColor: Color,
+    onHashtag: (String) -> Unit = {},
 ): Pair<AnnotatedString, Map<String, InlineTextContent>> {
     val cleaned = html
         .replace(Regex("<span class=\"invisible\">.*?</span>", RegexOption.DOT_MATCHES_ALL), "")
@@ -52,13 +54,23 @@ fun htmlToRich(
             val end = spanned.getSpanEnd(span).coerceIn(0, plain.length)
             if (end <= start) continue
             when (span) {
-                is URLSpan -> addLink(
-                    LinkAnnotation.Url(
-                        span.url,
-                        TextLinkStyles(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)),
-                    ),
-                    start, end,
-                )
+                is URLSpan -> {
+                    val style = TextLinkStyles(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline))
+                    val tag = hashtagFromLink(span.url, plain.substring(start, end))
+                    if (tag != null) {
+                        // Emneknagger åpnes i appen i stedet for i nettleseren
+                        addLink(
+                            LinkAnnotation.Clickable(
+                                tag = "hashtag:$tag",
+                                styles = style,
+                                linkInteractionListener = { onHashtag(tag) },
+                            ),
+                            start, end,
+                        )
+                    } else {
+                        addLink(LinkAnnotation.Url(span.url, style), start, end)
+                    }
+                }
                 is StyleSpan -> when (span.style) {
                     Typeface.BOLD -> addStyle(SpanStyle(fontWeight = FontWeight.Bold), start, end)
                     Typeface.ITALIC -> addStyle(SpanStyle(fontStyle = FontStyle.Italic), start, end)
@@ -101,6 +113,9 @@ fun withEmojis(src: AnnotatedString, emojis: List<Emoji>): Pair<AnnotatedString,
     return out to inline
 }
 
+/** Lar innlegg åpne en emneknagg-tidslinje når brukeren trykker på #emneknagg. */
+val LocalHashtagClick = staticCompositionLocalOf<(String) -> Unit> { {} }
+
 /** HTML-innhold fra et innlegg eller en profil. */
 @Composable
 fun RichText(
@@ -111,7 +126,8 @@ fun RichText(
     color: Color = PT.FgText,
     maxLines: Int = Int.MAX_VALUE,
 ) {
-    val (text, inline) = remember(html, emojis) { htmlToRich(html, emojis, PT.Link) }
+    val onHashtag = LocalHashtagClick.current
+    val (text, inline) = remember(html, emojis, onHashtag) { htmlToRich(html, emojis, PT.Link, onHashtag) }
     Text(
         text, modifier, style = style, color = color, maxLines = maxLines,
         overflow = TextOverflow.Ellipsis, inlineContent = inline,

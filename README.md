@@ -17,13 +17,17 @@ andre Pleroma-instanser (og i prinsippet andre tjenere med Mastodon-kompatibelt 
 - **Innlogging via OAuth** – du skriver inn instansadresse og godkjenner appen på instansens
   egen innloggingsside. Passordet ditt går aldri via appen.
 - **Tidslinjer:** Hjem, Lokalt og Fødererte, med pull-to-refresh og automatisk «hent flere».
-- **Egne lister** – nedtrekksmeny i toppen av «Hjem».
+- **Lokal feed og egne lister** – nedtrekksmenyen «Hjem ▾» i toppen av «Hjem» bytter mellom hjemmetidslinjen, lokal feed og listene dine.
 - **Innlegg:** svar, del, favoritt, bokmerke, kopier lenke, åpne i nettleser og slett egne.
 - **Lenkeforhåndsvisning** – innlegg med en lenke viser bilde og sidetittel i en boks som er klikkbar. Lenken skjules i teksten når den står alene på sin egen linje. Forhåndsvisningen lages av instansen, ikke av appen.
 - **Antall og avsender-app:** små tall viser antall svar, delinger og favoritter ved ikonene, og «via <app>» vises på innlegg der instansen oppgir hvilken app de ble postet fra (typisk lokale innlegg). Innlegg du selv har postet fra Pleromastisk viser alltid «via Pleromastisk».
+- **Søk** – egen fane i bunnlinjen. Søk etter brukere (`@navn`, også eksterne `@navn@domene`) og emneknagger (`#emne`). Vanlig tekst søker etter begge deler.
+- **Emneknagger i innlegg** – trykk på en #emneknagg for å se innlegg med den (åpnes i appen).
+- **Profilfelt** – profilens egne felt (metadata) vises i en tabell, med merke for bekreftede lenker.
 - **Tråder og profiler**, inkludert følg/slutt å følge.
 - **Skriv innlegg:** synlighet, innholdsvarsel, bildeopplasting (maks 4), Markdown (hvis
   instansen støtter det) og tegnteller.
+- **Språk på innlegg:** velg Nynorsk (nn), Bokmål (nb) eller Engelsk (en) i skriv-dialogen. Appen husker det siste valget. Språket sendes til instansen som språkmerking av innlegget.
 - **Alt-tekst:** trykk på et vedlagt bilde i skriv-skjermen for å legge inn en beskrivelse
   (grensen hentes fra instansen). Et ALT-merke på bildet viser om teksten er satt.
 - **Rediger innlegg:** «mer»-menyen (⋮) på egne innlegg har «Rediger» når instansen støtter
@@ -35,14 +39,14 @@ andre Pleroma-instanser (og i prinsippet andre tjenere med Mastodon-kompatibelt 
   `max_toot_chars`. Oppgir instansen ingenting, brukes **5000**.
 - **Emojier fra serveren** – egendefinerte emojier vises i innlegg, navn og varsler, og det
   finnes en søkbar emoji-velger (gruppert etter kategori) i skriv-skjermen.
-- **Varsler** (omtaler, delinger, favoritter, følgere, avstemninger, Pleroma-emojireaksjoner m.m.).
+- **Varsler** (omtaler, delinger, favoritter, følgere, avstemninger, Pleroma-emojireaksjoner m.m.). Filterlinje øverst: **Alle** eller kun **Svar** (svar og omtaler av deg).
 - **Avstemninger** – vis resultater og stem.
-- **Navigasjon og «Skriv»-knapp nederst** på skjermen.
+- **Navigasjon og «Skriv»-knapp nederst** på skjermen: Hjem · Føderert · Varsler · Søk · Skriv · Profil.
 - **Infoboks** (ⓘ øverst til høyre på «Hjem») med opplysninger om appen og lenke til kildekoden.
 
 ### Ikke med (ennå)
 
-Søk, chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil,
+Søk i innleggstekst, chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil,
 flere kontoer og avspilling av video i appen (åpnes i en annen app).
 
 ## Installere

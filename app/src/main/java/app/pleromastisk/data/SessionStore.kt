@@ -57,6 +57,11 @@ class SessionStore(context: Context) {
     @Synchronized
     fun wasPostedHere(id: String): Boolean = id in postedHere
 
+    /** Sist valgte språk for nye innlegg (nb, nn eller en). */
+    var language: String
+        get() = sp.getString("language", "nb") ?: "nb"
+        set(v) = sp.edit().putString("language", v).apply()
+
     fun clear() = sp.edit().clear().apply()
 
     companion object {

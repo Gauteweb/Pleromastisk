@@ -3,6 +3,7 @@ package app.pleromastisk.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
@@ -27,6 +28,14 @@ data class MastoList(
     val title: String = "",
 )
 
+/** Egendefinert profilfelt («metadata»), f.eks. «Nettside» → lenke. [value] er HTML. */
+@Serializable
+data class AccountField(
+    val name: String = "",
+    val value: String = "",
+    @SerialName("verified_at") val verifiedAt: String? = null,
+)
+
 @Serializable
 data class Account(
     val id: String,
@@ -43,6 +52,7 @@ data class Account(
     val emojis: List<Emoji> = emptyList(),
     val bot: Boolean = false,
     val locked: Boolean = false,
+    val fields: List<AccountField> = emptyList(),
 ) {
     val name: String get() = displayName.ifBlank { username }
 }
@@ -123,6 +133,7 @@ data class Status(
     val card: Card? = null,
     @SerialName("edited_at") val editedAt: String? = null,
     val application: AppInfo? = null,
+    val language: String? = null,
 )
 
 @Serializable
@@ -150,6 +161,22 @@ data class AppInfo(
     val name: String = "",
     val website: String? = null,
 )
+
+/** Svar fra /api/v2/search. Emneknagger tolkes defensivt (objekter eller rene tekststrenger). */
+@Serializable
+data class SearchResponse(
+    val accounts: List<Account> = emptyList(),
+    val hashtags: List<JsonElement> = emptyList(),
+) {
+    val tagNames: List<String>
+        get() = hashtags.mapNotNull { e ->
+            when (e) {
+                is JsonObject -> (e["name"] as? JsonPrimitive)?.contentOrNull
+                is JsonPrimitive -> e.contentOrNull
+                else -> null
+            }
+        }.filter { it.isNotBlank() }
+}
 
 @Serializable
 data class StatusContext(

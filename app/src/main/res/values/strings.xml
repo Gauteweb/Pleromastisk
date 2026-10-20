@@ -6,7 +6,8 @@
     <!-- Navigasjon -->
     <string name="nav_home">Hjem</string>
     <string name="nav_local">Lokalt</string>
-    <string name="nav_federated">Fødererte</string>
+    <string name="nav_search">Søk</string>
+    <string name="nav_federated">Føderert</string>
     <string name="nav_compose">Skriv</string>
     <string name="nav_notifications">Varsler</string>
     <string name="nav_profile">Profil</string>
@@ -14,6 +15,7 @@
     <string name="title_local">Lokal tidslinje</string>
     <string name="title_federated">Fødererte innlegg</string>
     <string name="title_notifications">Varsler</string>
+    <string name="title_search">Søk</string>
     <string name="title_profile">Min profil</string>
     <string name="title_account">Profil</string>
     <string name="title_thread">Tråd</string>
@@ -52,6 +54,24 @@
     <string name="compose_updated">Innlegget er oppdatert</string>
     <string name="edited">redigert</string>
     <string name="via_app">via %1$s</string>
+
+    <!-- Søk -->
+    <string name="search_hint">Søk etter @brukere og #emneknagger</string>
+    <string name="search_start">Skriv @navn for å finne brukere eller #emne for å finne emneknagger. Vanlig tekst søker etter begge deler.</string>
+    <string name="search_users">Brukere</string>
+    <string name="search_tags">Emneknagger</string>
+    <string name="search_empty">Ingen treff.</string>
+    <string name="search_clear">Tøm søket</string>
+
+    <!-- Lokal feed og profilfelt -->
+    <string name="menu_local_feed">Lokal feed</string>
+    <string name="profile_verified">Bekreftet lenke</string>
+
+    <!-- Språk på innlegg -->
+    <string name="language_label">Språk</string>
+    <string name="lang_nn">Nynorsk</string>
+    <string name="lang_nb">Bokmål</string>
+    <string name="lang_en">Engelsk</string>
 
     <!-- Lister -->
     <string name="lists_header">Mine lister</string>
@@ -132,6 +152,9 @@
     <string name="notif_reaction">%1$s reagerte med %2$s</string>
     <string name="notif_other">%1$s (%2$s)</string>
     <string name="empty_notifications">Ingen varsler.</string>
+    <string name="empty_replies">Ingen svar å vise.</string>
+    <string name="notif_filter_all">Alle</string>
+    <string name="notif_filter_replies">Svar</string>
 
     <!-- Profil -->
     <string name="profile_posts">Innlegg</string>

@@ -139,6 +139,10 @@ class TimelineViewModel(private val kind: TimelineKind) : PagedStatusViewModel()
     override suspend fun fetch(maxId: String?) = Graph.api.timeline(kind, maxId)
 }
 
+class TagViewModel(private val tag: String) : PagedStatusViewModel() {
+    override suspend fun fetch(maxId: String?) = Graph.api.tagTimeline(tag, maxId)
+}
+
 class ListTimelineViewModel(private val listId: String) : PagedStatusViewModel() {
     override suspend fun fetch(maxId: String?) = Graph.api.listTimeline(listId, maxId)
 }
@@ -223,12 +227,34 @@ class ThreadViewModel(private val id: String) : StatusListViewModel() {
     }
 }
 
+enum class NotificationFilter { ALL, REPLIES }
+
 class NotificationsViewModel : ViewModel() {
     private val _items = MutableStateFlow<List<Notification>>(emptyList())
     val items: StateFlow<List<Notification>> = _items.asStateFlow()
     private val _paging = MutableStateFlow(Paging())
     val paging: StateFlow<Paging> = _paging.asStateFlow()
+    private val _filter = MutableStateFlow(NotificationFilter.ALL)
+    val filter: StateFlow<NotificationFilter> = _filter.asStateFlow()
+
     private var refreshJob: Job? = null
+    private var moreJob: Job? = null
+
+    /** Siste varsel serveren sendte (før filtrering i appen) – brukes til «hent flere». */
+    private var cursor: String? = null
+
+    /** Sikkerhetsnett: viser bare svar/omtaler selv om en tjener skulle ignorere filteret. */
+    private fun matches(n: Notification, f: NotificationFilter) =
+        f == NotificationFilter.ALL || n.type == "mention"
+
+    fun setFilter(f: NotificationFilter) {
+        if (f == _filter.value) return
+        _filter.value = f
+        _items.value = emptyList()
+        cursor = null
+        _paging.value = Paging()
+        refresh()
+    }
 
     fun ensureLoaded() {
         if (_items.value.isEmpty() && !_paging.value.refreshing) refresh()
@@ -236,12 +262,15 @@ class NotificationsViewModel : ViewModel() {
 
     fun refresh() {
         refreshJob?.cancel()
+        moreJob?.cancel()
+        val f = _filter.value
         refreshJob = viewModelScope.launch {
-            _paging.update { it.copy(refreshing = true, error = null) }
+            _paging.update { it.copy(refreshing = true, loading = false, error = null) }
             try {
-                val page = Graph.api.notifications(null)
-                _items.value = page
-                _paging.update { it.copy(refreshing = false, loading = false, endReached = page.isEmpty()) }
+                val raw = Graph.api.notifications(null, f == NotificationFilter.REPLIES)
+                cursor = raw.lastOrNull()?.id
+                _items.value = raw.filter { matches(it, f) }
+                _paging.update { it.copy(refreshing = false, endReached = raw.isEmpty()) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -252,15 +281,17 @@ class NotificationsViewModel : ViewModel() {
 
     fun loadMore() {
         val p = _paging.value
-        val last = _items.value.lastOrNull() ?: return
+        val from = cursor ?: return
         if (p.loading || p.refreshing || p.endReached) return
-        viewModelScope.launch {
+        val f = _filter.value
+        moreJob = viewModelScope.launch {
             _paging.update { it.copy(loading = true) }
             try {
-                val page = Graph.api.notifications(last.id)
+                val raw = Graph.api.notifications(from, f == NotificationFilter.REPLIES)
+                cursor = raw.lastOrNull()?.id ?: from
                 val known = _items.value.map { it.id }.toSet()
-                _items.update { it + page.filter { n -> n.id !in known } }
-                _paging.update { it.copy(loading = false, endReached = page.isEmpty()) }
+                _items.update { it + raw.filter { n -> matches(n, f) && n.id !in known } }
+                _paging.update { it.copy(loading = false, endReached = raw.isEmpty()) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

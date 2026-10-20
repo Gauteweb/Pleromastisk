@@ -128,6 +128,8 @@ fun PButton(
     enabled: Boolean = true,
     filled: Boolean = false,
     icon: ImageVector? = null,
+    /** Beskrivelse for skjermlesere når knappen bare har ikon. */
+    description: String? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -144,15 +146,17 @@ fun PButton(
             .background(bg)
             .border(BorderStroke(1.dp, if (pressed) PT.PressedBorder else PT.Border.copy(alpha = 0.8f)))
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(horizontal = if (text.isBlank()) 10.dp else 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         if (icon != null) {
-            Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
+            Icon(icon, contentDescription = description ?: text.ifBlank { null }, tint = content, modifier = Modifier.size(18.dp))
+            if (text.isNotBlank()) Spacer(Modifier.width(6.dp))
         }
-        Text(text, color = content, fontWeight = FontWeight.Medium, maxLines = 1)
+        if (text.isNotBlank()) {
+            Text(text, color = content, fontWeight = FontWeight.Medium, maxLines = 1)
+        }
     }
 }
 

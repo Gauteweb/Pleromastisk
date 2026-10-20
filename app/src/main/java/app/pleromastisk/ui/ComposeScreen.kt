@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -84,6 +85,15 @@ private data class Attachment(
 private val Visibilities = listOf("public", "unlisted", "private", "direct")
 
 @Composable
+private fun languageName(code: String): String = stringResource(
+    when (code) {
+        "nn" -> R.string.lang_nn
+        "en" -> R.string.lang_en
+        else -> R.string.lang_nb
+    },
+)
+
+@Composable
 private fun visibilityLabel(v: String): String = stringResource(
     when (v) {
         "unlisted" -> R.string.vis_unlisted
@@ -116,6 +126,11 @@ fun ComposeScreen(
     var cw by rememberSaveable { mutableStateOf("") }
     var visibility by rememberSaveable { mutableStateOf(replyVisibility ?: "public") }
     var markdown by rememberSaveable { mutableStateOf(false) }
+    // Språk: nye innlegg starter med sist brukte valg. Ved redigering brukes innleggets eget språk
+    // (null hvis det er et annet språk enn de tre vi tilbyr – da endres det ikke).
+    var language by rememberSaveable { mutableStateOf<String?>(if (editId != null) null else Graph.store.language) }
+    var originalLanguage by remember { mutableStateOf<String?>(null) }
+    var langMenu by remember { mutableStateOf(false) }
     var sending by remember { mutableStateOf(false) }
     var loadingEdit by remember { mutableStateOf(editing) }
     var visMenu by remember { mutableStateOf(false) }
@@ -145,6 +160,8 @@ fun ComposeScreen(
             cwOn = cw.isNotBlank()
             visibility = st.visibility
             markdown = src?.contentType == "text/markdown"
+            originalLanguage = normalizePostLanguage(st.language)
+            language = originalLanguage
             attachments.clear()
             st.mediaAttachments.forEach { m ->
                 attachments.add(
@@ -230,6 +247,8 @@ fun ComposeScreen(
                         spoiler = if (cwOn) cw else null,
                         mediaIds = mediaIds,
                         contentType = contentType,
+                        // Språk sendes bare hvis brukeren har endret det
+                        language = language?.takeIf { it != originalLanguage },
                     )
                     Graph.toast(Graph.str(R.string.compose_updated))
                 } else {
@@ -240,7 +259,9 @@ fun ComposeScreen(
                         replyTo = replyId,
                         mediaIds = mediaIds,
                         contentType = contentType,
+                        language = language,
                     )
+                    language?.let { Graph.store.language = it }
                     Graph.toast(Graph.str(R.string.compose_published))
                 }
                 Graph.posted.tryEmit(Unit)
@@ -375,20 +396,27 @@ fun ComposeScreen(
         Column(Modifier.fillMaxWidth().background(PT.Fg).navigationBarsPadding()) {
             HorizontalDivider(color = PT.Border)
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                // Rullbar som sikkerhet på smale skjermer
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 PButton(
                     text = "", icon = Icons.Filled.Image,
+                    description = stringResource(R.string.compose_attach),
                     onClick = {
                         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
                     },
                     enabled = attachments.size < 4 && !loadingEdit,
                 )
-                PButton(text = "", icon = Icons.Filled.Warning, onClick = { cwOn = !cwOn }, filled = cwOn)
+                PButton(
+                    text = "", icon = Icons.Filled.Warning,
+                    description = stringResource(R.string.compose_cw_toggle),
+                    onClick = { cwOn = !cwOn }, filled = cwOn,
+                )
                 PButton(
                     text = "", icon = Icons.Filled.EmojiEmotions,
+                    description = stringResource(R.string.compose_emoji),
                     onClick = {
                         emojiOpen = !emojiOpen
                         if (emojiOpen) keyboard?.hide()
@@ -396,9 +424,36 @@ fun ComposeScreen(
                     filled = emojiOpen,
                 )
                 Box {
-                    // Synlighet kan ikke endres når man redigerer et eksisterende innlegg
                     PButton(
-                        text = visibilityLabel(visibility), icon = visibilityIcon(visibility),
+                        text = language?.uppercase() ?: "–",
+                        icon = Icons.Filled.Translate,
+                        description = stringResource(R.string.language_label) +
+                            (language?.let { ": " + languageName(it) } ?: ""),
+                        onClick = { langMenu = true },
+                        enabled = !loadingEdit,
+                    )
+                    DropdownMenu(expanded = langMenu, onDismissRequest = { langMenu = false }) {
+                        PostLanguages.forEach { code ->
+                            val selected = code == language
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        languageName(code) + " ($code)",
+                                        color = if (selected) PT.TopBarText else PT.FgText,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                    )
+                                },
+                                onClick = { language = code; langMenu = false },
+                            )
+                        }
+                    }
+                }
+                Box {
+                    // Synlighet kan ikke endres når man redigerer et eksisterende innlegg
+                    // Bare ikon (uten tekst) – valgene med navn vises i menyen når du trykker
+                    PButton(
+                        text = "", icon = visibilityIcon(visibility),
+                        description = stringResource(R.string.visibility) + ": " + visibilityLabel(visibility),
                         onClick = { visMenu = true },
                         enabled = !editing,
                     )

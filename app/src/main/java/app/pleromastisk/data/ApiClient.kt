@@ -149,6 +149,13 @@ class ApiClient(private val store: SessionStore) {
     suspend fun listTimeline(listId: String, maxId: String?): List<Status> =
         get(withPaging("/api/v1/timelines/list/$listId", maxId))
 
+    suspend fun tagTimeline(tag: String, maxId: String?): List<Status> =
+        get(withPaging("/api/v1/timelines/tag/${Uri.encode(tag)}", maxId))
+
+    /** [type] er «accounts» eller «hashtags». [resolve] ber tjeneren slå opp eksterne brukere (@navn@domene). */
+    suspend fun search(q: String, type: String, resolve: Boolean): SearchResponse =
+        get("/api/v2/search?q=${Uri.encode(q)}&type=$type&limit=20" + if (resolve) "&resolve=true" else "")
+
     suspend fun lists(): List<MastoList> = get("/api/v1/lists")
 
     suspend fun customEmojis(): List<Emoji> = get("/api/v1/custom_emojis")
@@ -156,8 +163,16 @@ class ApiClient(private val store: SessionStore) {
     suspend fun accountStatuses(id: String, maxId: String?): List<Status> =
         get(withPaging("/api/v1/accounts/$id/statuses", maxId))
 
-    suspend fun notifications(maxId: String?): List<Notification> =
-        get(withPaging("/api/v1/notifications", maxId))
+    /**
+     * [onlyMentions] filtrerer på serveren. Pleroma bruker `include_types[]`, Mastodon `types[]` –
+     * begge sendes, og tjenere ignorerer parameteren de ikke kjenner. Svar til deg kommer som «mention».
+     */
+    suspend fun notifications(maxId: String?, onlyMentions: Boolean = false): List<Notification> {
+        val path = if (onlyMentions) {
+            "/api/v1/notifications?include_types[]=mention&types[]=mention"
+        } else "/api/v1/notifications"
+        return get(withPaging(path, maxId))
+    }
 
     suspend fun status(id: String): Status = get("/api/v1/statuses/$id")
     suspend fun statusContext(id: String): StatusContext = get("/api/v1/statuses/$id/context")
@@ -191,10 +206,12 @@ class ApiClient(private val store: SessionStore) {
         replyTo: String?,
         mediaIds: List<String>,
         contentType: String?,
+        language: String? = null,
     ): Status {
         val body = buildJsonObject {
             put("status", text)
             put("visibility", visibility)
+            if (language != null) put("language", language)
             if (!spoiler.isNullOrBlank()) put("spoiler_text", spoiler)
             if (replyTo != null) put("in_reply_to_id", replyTo)
             if (mediaIds.isNotEmpty()) put("media_ids", JsonArray(mediaIds.map { JsonPrimitive(it) }))
@@ -220,9 +237,11 @@ class ApiClient(private val store: SessionStore) {
         spoiler: String?,
         mediaIds: List<String>,
         contentType: String?,
+        language: String? = null,
     ): Status {
         val body = buildJsonObject {
             put("status", text)
+            if (language != null) put("language", language)
             put("spoiler_text", spoiler.orEmpty())
             put("media_ids", JsonArray(mediaIds.map { JsonPrimitive(it) }))
             if (contentType != null) put("content_type", contentType)

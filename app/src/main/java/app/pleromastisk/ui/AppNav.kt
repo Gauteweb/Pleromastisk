@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -83,21 +84,25 @@ import app.pleromastisk.vm.AuthViewModel
 import app.pleromastisk.vm.ListTimelineViewModel
 import app.pleromastisk.vm.ListsViewModel
 import app.pleromastisk.vm.NotificationsViewModel
+import app.pleromastisk.vm.SearchViewModel
+import app.pleromastisk.vm.TagViewModel
 import app.pleromastisk.vm.PagedStatusViewModel
 import app.pleromastisk.vm.StatusListViewModel
 import app.pleromastisk.vm.ThreadViewModel
 import app.pleromastisk.vm.TimelineViewModel
 
 private const val HOME = "home"
-private const val LOCAL = "local"
+/** Spesialverdi for «valgt feed» i Hjem: lokal tidslinje (kolliderer ikke med liste-ID-er). */
+private const val LOCAL_FEED = "__local__"
 private const val FEDERATED = "federated"
 private const val NOTIFICATIONS = "notifications"
+private const val SEARCH = "search"
 private const val PROFILE = "profile"
 private const val COMPOSE_BASE = "compose"
 private const val COMPOSE =
     "compose?replyId={replyId}&replyMentions={replyMentions}&replyVis={replyVis}&editId={editId}"
 
-private val TopLevel = setOf(HOME, LOCAL, FEDERATED, NOTIFICATIONS, PROFILE)
+private val TopLevel = setOf(HOME, FEDERATED, NOTIFICATIONS, SEARCH, PROFILE)
 
 @Composable
 fun PleromastiskRoot(auth: AuthViewModel) {
@@ -149,12 +154,20 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
 
     if (showAbout) AboutDialog(onDismiss = { showAbout = false })
 
+    // Trykk på #emneknagg i et innlegg åpner emneknaggens tidslinje
+    val openTag = remember(nav) { { tag: String -> nav.navigate("tag/${Uri.encode(tag)}") } }
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             if (showChrome) {
                 PTopBar(
-                    title = if (route == HOME && selectedList != null) selectedList.title else titleFor(route),
+                    title = when {
+                        route == HOME && selectedListId == LOCAL_FEED -> stringResource(R.string.menu_local_feed)
+                        route == HOME && selectedList != null -> selectedList.title
+                        route?.startsWith("tag/") == true -> "#" + entry?.arguments?.getString("tag").orEmpty()
+                        else -> titleFor(route)
+                    },
                     onBack = if (route in TopLevel) null else ({ nav.popBackStack() }),
                     titleContent = if (route == HOME) { title ->
                         ListMenuTitle(
@@ -178,6 +191,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
         // Navigasjonsknapper og «skriv»-knappen ligger alltid nederst på siden.
         bottomBar = { if (showChrome) PBottomBar(route, onNavigate = ::go, onCompose = { nav.navigate(COMPOSE_BASE) }) },
     ) { pad ->
+        CompositionLocalProvider(LocalHashtagClick provides openTag) {
         NavHost(
             navController = nav,
             startDestination = HOME,
@@ -185,20 +199,23 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
         ) {
             composable(HOME) {
                 val listId = selectedListId
-                val vm: PagedStatusViewModel = if (listId == null) {
-                    viewModel<TimelineViewModel>(
+                val vm: PagedStatusViewModel = when (listId) {
+                    null -> viewModel<TimelineViewModel>(
                         key = "tl_$HOME",
                         factory = viewModelFactory { initializer { TimelineViewModel(TimelineKind.HOME) } },
                     )
-                } else {
-                    viewModel<ListTimelineViewModel>(
+                    LOCAL_FEED -> viewModel<TimelineViewModel>(
+                        key = "tl_local",
+                        factory = viewModelFactory { initializer { TimelineViewModel(TimelineKind.LOCAL) } },
+                    )
+                    else -> viewModel<ListTimelineViewModel>(
                         key = "list_$listId",
                         factory = viewModelFactory { initializer { ListTimelineViewModel(listId) } },
                     )
                 }
                 StatusFeed(vm, actionsFor(vm))
             }
-            for ((r, kind) in listOf(LOCAL to TimelineKind.LOCAL, FEDERATED to TimelineKind.FEDERATED)) {
+            for ((r, kind) in listOf(FEDERATED to TimelineKind.FEDERATED)) {
                 composable(r) {
                     val vm: TimelineViewModel = viewModel(
                         key = "tl_$r",
@@ -227,6 +244,22 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                     )
                     AccountScreen(me.id, true, vm, actionsFor(vm), onLogout = { auth.logout() })
                 }
+            }
+            composable(SEARCH) {
+                val vm: SearchViewModel = viewModel()
+                SearchScreen(
+                    vm,
+                    onOpenAccount = { nav.navigate("account/${it.id}") },
+                    onOpenTag = { nav.navigate("tag/${Uri.encode(it)}") },
+                )
+            }
+            composable("tag/{tag}", arguments = listOf(navArgument("tag") { type = NavType.StringType })) { e ->
+                val tag = e.arguments?.getString("tag").orEmpty()
+                val vm: TagViewModel = viewModel(
+                    key = "tag_$tag",
+                    factory = viewModelFactory { initializer { TagViewModel(tag) } },
+                )
+                StatusFeed(vm, actionsFor(vm))
             }
             composable("account/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
                 val id = e.arguments?.getString("id").orEmpty()
@@ -265,6 +298,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                 )
             }
         }
+        }
     }
 }
 
@@ -280,9 +314,9 @@ private fun replyRoute(s: Status, myAcct: String?): String {
 private fun titleFor(route: String?): String = stringResource(
     when {
         route == HOME -> R.string.title_home
-        route == LOCAL -> R.string.title_local
         route == FEDERATED -> R.string.title_federated
         route == NOTIFICATIONS -> R.string.title_notifications
+        route == SEARCH -> R.string.title_search
         route == PROFILE -> R.string.title_profile
         route?.startsWith("thread") == true -> R.string.title_thread
         else -> R.string.title_account
@@ -317,7 +351,7 @@ private fun PTopBar(
     }
 }
 
-/** Bunnlinje: Hjem · Lokalt · Fødererte · [Skriv] · Varsler · Profil */
+/** Bunnlinje: Hjem · Føderert · Varsler · Søk · [Skriv] · Profil */
 @Composable
 private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: () -> Unit) {
     Column(Modifier.fillMaxWidth().background(PT.TopBar)) {
@@ -327,8 +361,9 @@ private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             NavItem(Icons.Filled.Home, R.string.nav_home, route == HOME) { onNavigate(HOME) }
-            NavItem(Icons.Filled.People, R.string.nav_local, route == LOCAL) { onNavigate(LOCAL) }
             NavItem(Icons.Filled.Public, R.string.nav_federated, route == FEDERATED) { onNavigate(FEDERATED) }
+            NavItem(Icons.Filled.Notifications, R.string.nav_notifications, route == NOTIFICATIONS) { onNavigate(NOTIFICATIONS) }
+            NavItem(Icons.Filled.Search, R.string.nav_search, route == SEARCH) { onNavigate(SEARCH) }
             // «Skriv nytt innlegg»: fremhevet knapp midt i linjen
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
@@ -342,7 +377,6 @@ private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: 
                     Icon(Icons.Filled.Edit, stringResource(R.string.nav_compose), tint = PT.Fg)
                 }
             }
-            NavItem(Icons.Filled.Notifications, R.string.nav_notifications, route == NOTIFICATIONS) { onNavigate(NOTIFICATIONS) }
             NavItem(Icons.Filled.Person, R.string.nav_profile, route == PROFILE) { onNavigate(PROFILE) }
         }
     }
@@ -399,6 +433,17 @@ private fun ListMenuTitle(
                 },
                 leadingIcon = { Icon(Icons.Filled.Home, null, tint = PT.Link) },
                 onClick = { open = false; onSelect(null) },
+            )
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        stringResource(R.string.menu_local_feed),
+                        color = if (selectedId == LOCAL_FEED) PT.TopBarText else PT.FgText,
+                        fontWeight = if (selectedId == LOCAL_FEED) FontWeight.Bold else FontWeight.Normal,
+                    )
+                },
+                leadingIcon = { Icon(Icons.Filled.People, null, tint = PT.Link) },
+                onClick = { open = false; onSelect(LOCAL_FEED) },
             )
             HorizontalDivider(color = PT.Border.copy(alpha = 0.5f))
             DropdownMenuItem(

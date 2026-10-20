@@ -9,6 +9,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,12 +32,15 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -67,6 +72,7 @@ import app.pleromastisk.data.Notification
 import app.pleromastisk.relativeTime
 import app.pleromastisk.vm.AccountViewModel
 import app.pleromastisk.vm.AuthViewModel
+import app.pleromastisk.vm.NotificationFilter
 import app.pleromastisk.vm.NotificationsViewModel
 import app.pleromastisk.vm.PagedStatusViewModel
 import app.pleromastisk.vm.ThreadViewModel
@@ -155,7 +161,7 @@ fun ErrorPanel(message: String, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun LoadingRow() {
+internal fun LoadingRow() {
     Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(Modifier.size(28.dp), color = PT.Link, strokeWidth = 2.dp)
     }
@@ -256,6 +262,27 @@ private fun notificationText(n: Notification): String {
     }
 }
 
+/** Filterlinje øverst i varsler: Alle / Svar. */
+@Composable
+private fun NotificationFilterBar(selected: NotificationFilter, onSelect: (NotificationFilter) -> Unit) {
+    Column(Modifier.fillMaxWidth().background(PT.Fg.copy(alpha = 0.92f))) {
+        Row(
+            Modifier.fillMaxWidth().padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            PButton(
+                stringResource(R.string.notif_filter_all), { onSelect(NotificationFilter.ALL) },
+                Modifier.weight(1f), filled = selected == NotificationFilter.ALL,
+            )
+            PButton(
+                stringResource(R.string.notif_filter_replies), { onSelect(NotificationFilter.REPLIES) },
+                Modifier.weight(1f), filled = selected == NotificationFilter.REPLIES,
+            )
+        }
+        HorizontalDivider(color = PT.Border)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
@@ -266,9 +293,11 @@ fun NotificationsScreen(
 ) {
     val items by vm.items.collectAsStateWithLifecycle()
     val paging by vm.paging.collectAsStateWithLifecycle()
+    val filter by vm.filter.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
     LaunchedEffect(vm) { vm.ensureLoaded() }
+    LaunchedEffect(filter) { listState.scrollToItem(0) }
     val nearEnd by remember {
         derivedStateOf {
             val info = listState.layoutInfo
@@ -278,64 +307,81 @@ fun NotificationsScreen(
     }
     LaunchedEffect(nearEnd, items.size) { if (nearEnd && items.isNotEmpty()) vm.loadMore() }
 
-    PullToRefreshBox(isRefreshing = paging.refreshing, onRefresh = { vm.refresh() }, modifier = modifier) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+    Column(modifier.fillMaxSize()) {
+        NotificationFilterBar(filter, onSelect = { vm.setFilter(it) })
+        PullToRefreshBox(
+            isRefreshing = paging.refreshing,
+            onRefresh = { vm.refresh() },
+            modifier = Modifier.weight(1f).fillMaxWidth(),
         ) {
-            if (paging.error != null && items.isEmpty()) {
-                item { ErrorPanel(paging.error ?: "", onRetry = { vm.refresh() }) }
-            } else if (items.isEmpty() && !paging.refreshing) {
-                item { Panel { Text(stringResource(R.string.empty_notifications), Modifier.padding(14.dp), color = PT.Text) } }
-            }
-            items(items, key = { it.id }) { n ->
-                val target = (n.status?.reblog ?: n.status)
-                Panel(
-                    Modifier.clickable {
-                        if (target != null) onOpenStatus(target.id) else onOpenProfile(n.account)
-                    },
-                ) {
-                    Column(Modifier.padding(10.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Avatar(n.account.avatar, 36, Modifier.clickable { onOpenProfile(n.account) })
-                            Spacer(Modifier.width(10.dp))
-                            Icon(
-                                when (n.type) {
-                                    "reblog" -> Icons.Filled.Repeat
-                                    "favourite" -> Icons.Filled.Star
-                                    "pleroma:emoji_reaction" -> Icons.Filled.Favorite
-                                    else -> Icons.Filled.Person
-                                },
-                                null,
-                                tint = when (n.type) {
-                                    "reblog" -> PT.Green
-                                    "favourite" -> PT.Orange
-                                    "pleroma:emoji_reaction" -> PT.Red
-                                    else -> PT.Blue
-                                },
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            EmojiText(
-                                notificationText(n), n.account.emojis, Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodyMedium, color = PT.Text, maxLines = 2,
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(relativeTime(n.createdAt), style = MaterialTheme.typography.bodySmall, color = PT.Muted)
-                        }
-                        if (target != null && target.content.isNotBlank() && n.type != "poll") {
-                            Spacer(Modifier.height(8.dp))
-                            RichText(
-                                target.content, target.emojis,
-                                style = MaterialTheme.typography.bodySmall, color = PT.Muted, maxLines = 4,
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (paging.error != null && items.isEmpty()) {
+                    item { ErrorPanel(paging.error ?: "", onRetry = { vm.refresh() }) }
+                } else if (items.isEmpty() && !paging.refreshing) {
+                    item {
+                        Panel {
+                            Text(
+                                stringResource(
+                                    if (filter == NotificationFilter.REPLIES) R.string.empty_replies
+                                    else R.string.empty_notifications,
+                                ),
+                                Modifier.padding(14.dp), color = PT.Text,
                             )
                         }
                     }
                 }
+                items(items, key = { it.id }) { n ->
+                    val target = (n.status?.reblog ?: n.status)
+                    Panel(
+                        Modifier.clickable {
+                            if (target != null) onOpenStatus(target.id) else onOpenProfile(n.account)
+                        },
+                    ) {
+                        Column(Modifier.padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Avatar(n.account.avatar, 36, Modifier.clickable { onOpenProfile(n.account) })
+                                Spacer(Modifier.width(10.dp))
+                                Icon(
+                                    when (n.type) {
+                                        "reblog" -> Icons.Filled.Repeat
+                                        "favourite" -> Icons.Filled.Star
+                                        "pleroma:emoji_reaction" -> Icons.Filled.Favorite
+                                        else -> Icons.Filled.Person
+                                    },
+                                    null,
+                                    tint = when (n.type) {
+                                        "reblog" -> PT.Green
+                                        "favourite" -> PT.Orange
+                                        "pleroma:emoji_reaction" -> PT.Red
+                                        else -> PT.Blue
+                                    },
+                                    modifier = Modifier.size(18.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                EmojiText(
+                                    notificationText(n), n.account.emojis, Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyMedium, color = PT.Text, maxLines = 2,
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(relativeTime(n.createdAt), style = MaterialTheme.typography.bodySmall, color = PT.Muted)
+                            }
+                            if (target != null && target.content.isNotBlank() && n.type != "poll") {
+                                Spacer(Modifier.height(8.dp))
+                                RichText(
+                                    target.content, target.emojis,
+                                    style = MaterialTheme.typography.bodySmall, color = PT.Muted, maxLines = 4,
+                                )
+                            }
+                        }
+                    }
+                }
+                if (paging.loading) item { LoadingRow() }
             }
-            if (paging.loading) item { LoadingRow() }
         }
     }
 }
@@ -382,6 +428,10 @@ fun AccountScreen(
                             Spacer(Modifier.height(10.dp))
                             RichText(a.note, a.emojis, style = MaterialTheme.typography.bodyMedium, color = PT.Text)
                         }
+                        if (a.fields.isNotEmpty()) {
+                            Spacer(Modifier.height(12.dp))
+                            FieldsTable(a)
+                        }
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                             Counter(a.statusesCount, stringResource(R.string.profile_posts))
@@ -415,5 +465,47 @@ private fun Counter(value: Int, label: String) {
     Column {
         Text(value.toString(), color = PT.Text, fontWeight = FontWeight.Bold)
         Text(label, color = PT.Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+/** Tabell med profilens egne felt (metadata): navn til venstre, verdi (med lenker) til høyre. */
+@Composable
+private fun FieldsTable(account: Account) {
+    Column(Modifier.fillMaxWidth().border(1.dp, PT.Border.copy(alpha = 0.6f))) {
+        account.fields.forEachIndexed { i, f ->
+            if (i > 0) HorizontalDivider(color = PT.Border.copy(alpha = 0.35f))
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+                Box(
+                    Modifier
+                        .weight(0.34f)
+                        .fillMaxHeight()
+                        .background(PT.Bg.copy(alpha = 0.35f))
+                        .padding(8.dp),
+                ) {
+                    EmojiText(
+                        f.name, account.emojis,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PT.Link, fontWeight = FontWeight.Bold,
+                    )
+                }
+                VerticalDivider(color = PT.Border.copy(alpha = 0.35f))
+                Row(
+                    Modifier.weight(0.66f).padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RichText(
+                        f.value, account.emojis, Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodySmall, color = PT.Text,
+                    )
+                    if (!f.verifiedAt.isNullOrBlank()) {
+                        Spacer(Modifier.width(6.dp))
+                        Icon(
+                            Icons.Filled.Check, stringResource(R.string.profile_verified),
+                            tint = PT.Green, modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            }
+        }
     }
 }
