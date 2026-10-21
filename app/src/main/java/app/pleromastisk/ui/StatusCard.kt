@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.Bookmark
@@ -70,6 +71,8 @@ import app.pleromastisk.data.Poll
 import app.pleromastisk.data.Status
 import app.pleromastisk.relativeTime
 import coil.compose.AsyncImage
+import coil.request.videoFrameMillis
+import coil.request.ImageRequest
 
 /** Alt et kort kan gjøre – skjermene kobler dette til sin ViewModel/navigasjon. */
 class StatusActions(
@@ -388,7 +391,16 @@ private fun MediaGrid(items: List<MediaAttachment>, sensitive: Boolean) {
 @Composable
 private fun MediaTile(m: MediaAttachment, single: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     // Bilder vises i full oppløsning; andre typer (video m.m.) bruker forhåndsvisningen.
-    val shown = if (m.type == "image") m.url else m.previewUrl?.takeIf { it.isNotBlank() }
+    // Pleroma lager ofte ingen egen forhåndsvisning for video (preview_url peker da på selve
+    // videofilen) – da henter Coil et stillbilde fra videoen (se VideoFrameDecoder i appen).
+    val isVideo = m.type == "video" || m.type == "gifv"
+    val shown: Any? = when {
+        m.type == "image" -> m.url
+        isVideo -> (m.previewUrl?.takeIf { it.isNotBlank() } ?: m.url.takeIf { it.isNotBlank() })?.let { src ->
+            ImageRequest.Builder(LocalContext.current).data(src).videoFrameMillis(1000).build()
+        }
+        else -> m.previewUrl?.takeIf { it.isNotBlank() }
+    }
     val ratio = if (single) m.aspectRatio?.coerceIn(0.4f, 3f) else 1f
     Box(
         modifier
@@ -410,9 +422,14 @@ private fun MediaTile(m: MediaAttachment, single: Boolean, onClick: () -> Unit, 
             Box(Modifier.fillMaxWidth().height(90.dp))
         }
         if (m.type != "image") {
+            // Play-knapp på mørk, rund bakgrunn så den synes over både lyse og mørke bilder
             Icon(
                 Icons.Filled.PlayArrow, stringResource(R.string.attachment_open),
-                tint = PT.Text, modifier = Modifier.size(40.dp),
+                tint = Color.White,
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                    .padding(8.dp),
             )
         }
         // ALT-merke når bildet har alt-tekst

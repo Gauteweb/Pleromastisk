@@ -98,6 +98,7 @@ private const val FEDERATED = "federated"
 private const val NOTIFICATIONS = "notifications"
 private const val SEARCH = "search"
 private const val PROFILE = "profile"
+private const val INSTANCE_ABOUT = "instance_about"
 private const val COMPOSE_BASE = "compose"
 private const val COMPOSE =
     "compose?replyId={replyId}&replyMentions={replyMentions}&replyVis={replyVis}&editId={editId}"
@@ -179,7 +180,12 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                         )
                     } else null,
                     actions = {
-                        if (route == HOME) {
+                        if (route == HOME && selectedListId == LOCAL_FEED) {
+                            // «Om»-siden til instansen brukeren er logget inn på
+                            TextButton(onClick = { nav.navigate(INSTANCE_ABOUT) }) {
+                                Text(stringResource(R.string.instance_about_button), color = PT.TopBarText)
+                            }
+                        } else if (route == HOME) {
                             IconButton(onClick = { showAbout = true }) {
                                 Icon(Icons.Filled.Info, stringResource(R.string.about_button), tint = PT.TopBarText)
                             }
@@ -253,6 +259,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                     onOpenTag = { nav.navigate("tag/${Uri.encode(it)}") },
                 )
             }
+            composable(INSTANCE_ABOUT) { InstanceAboutScreen() }
             composable("tag/{tag}", arguments = listOf(navArgument("tag") { type = NavType.StringType })) { e ->
                 val tag = e.arguments?.getString("tag").orEmpty()
                 val vm: TagViewModel = viewModel(
@@ -318,6 +325,7 @@ private fun titleFor(route: String?): String = stringResource(
         route == NOTIFICATIONS -> R.string.title_notifications
         route == SEARCH -> R.string.title_search
         route == PROFILE -> R.string.title_profile
+        route == INSTANCE_ABOUT -> R.string.instance_about_title
         route?.startsWith("thread") == true -> R.string.title_thread
         else -> R.string.title_account
     },

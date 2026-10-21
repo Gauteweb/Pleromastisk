@@ -127,6 +127,23 @@ class ApiClient(private val store: SessionStore) {
     // ---------- Instans og konto ----------
 
     suspend fun instanceInfo(): InstanceInfo = get("/api/v1/instance")
+
+    /**
+     * Innholdet Pleroma-FE viser på /about: instansens egen panel-tekst og tjenestevilkårene.
+     * Begge er HTML; en side som mangler (404 o.l.) hoppes over, mens nettverksfeil kastes videre.
+     */
+    suspend fun instanceAboutHtml(): List<String> =
+        listOf("/instance/panel.html", "/static/terms-of-service.html").mapNotNull { path ->
+            try {
+                exec(builder(path, auth = false).header("Accept", "text/html").get().build()) { it }
+            } catch (e: ApiException) {
+                null
+            }?.let(::htmlBody)?.takeIf { it.isNotBlank() }
+        }
+
+    /** Plukker ut innholdet i `<body>` når siden er et helt HTML-dokument. */
+    private fun htmlBody(html: String): String =
+        Regex("(?is)<body[^>]*>(.*)</body>").find(html)?.groupValues?.get(1)?.trim() ?: html.trim()
     suspend fun verifyCredentials(): Account = get("/api/v1/accounts/verify_credentials")
     suspend fun account(id: String): Account = get("/api/v1/accounts/$id")
     suspend fun relationship(id: String): Relationship? =

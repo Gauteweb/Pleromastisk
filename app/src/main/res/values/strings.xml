@@ -37,6 +37,9 @@
     <string name="about_p3">Du kan laste ned kildekoden og videreutvikle appen selv fra</string>
     <string name="about_p4">Appen finnes per nå kun for Android, det er ingen planer for en iOS versjon.</string>
     <string name="about_close">Lukk</string>
+    <string name="instance_about_button">Om</string>
+    <string name="instance_about_title">Om instansen</string>
+    <string name="instance_about_empty">Instansen har ingen «Om»-side.</string>
 
     <!-- Alt-tekst og redigering -->
     <string name="alt_title">Alt-tekst</string>

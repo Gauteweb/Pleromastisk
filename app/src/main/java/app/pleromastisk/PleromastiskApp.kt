@@ -8,6 +8,9 @@ import app.pleromastisk.data.ApiClient
 import app.pleromastisk.data.ApiException
 import app.pleromastisk.data.Emoji
 import app.pleromastisk.data.SessionStore
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.decode.VideoFrameDecoder
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.io.IOException
 import java.time.Instant
@@ -16,11 +19,16 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-class PleromastiskApp : Application() {
+class PleromastiskApp : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
         Graph.init(this)
     }
+
+    /** Coil-oppsett: kan også hente et stillbilde fra videoer (forhåndsvisning i innlegg). */
+    override fun newImageLoader(): ImageLoader = ImageLoader.Builder(this)
+        .components { add(VideoFrameDecoder.Factory()) }
+        .build()
 }
 
 /** Enkel «service locator» – holder på det som deles mellom skjermene. */
