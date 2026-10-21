@@ -41,6 +41,7 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
   innlegg merkes «redigert».
 - **Bildevisning med alt-tekst** – trykk på et bilde for å åpne det i full størrelse med alt-teksten under. Klyp eller dobbelttrykk for å zoome. Sveip mellom flere bilder. Bilder med alt-tekst har et ALT-merke.
 - **Bilder vises fullt ut** i tidslinjene – uten beskjæring og tilpasset skjermbredden.
+- **Forhåndsbilde av video** – innlegg med video viser et stillbilde fra videoen med en play-knapp over. Har ikke instansen laget et eget forhåndsbilde, henter appen et bilde fra selve videoen. Trykk for å spille av videoen i en annen app.
 - **Tegngrense fra instansen** – leses fra `configuration.statuses.max_characters`, deretter
   `max_toot_chars`. Oppgir instansen ingenting, brukes **5000**.
 - **Emojier fra serveren** – egendefinerte emojier vises i innlegg, navn og varsler, og det
@@ -49,6 +50,7 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 - **Avstemninger** – vis resultater og stem.
 - **Navigasjon og «Skriv»-knapp nederst** på skjermen: Hjem · Føderert · Varsler · Søk · Skriv · Profil.
 - **Infoboks** (ⓘ øverst til høyre på «Hjem») med opplysninger om appen og lenke til kildekoden.
+- **Om instansen** – i lokal feed er ⓘ byttet ut med en «Om»-knapp. Den viser «Om»-siden til instansen du er logget inn på (instansens egen tekst og tjenestevilkår) inne i appen, med menyene oppe og nede på plass.
 
 ### Ikke med (ennå)
 
