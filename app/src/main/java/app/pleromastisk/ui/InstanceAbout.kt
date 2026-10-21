@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +56,9 @@ fun InstanceAboutScreen() {
 private fun AboutWebView(sections: List<String>) {
     val base = Graph.store.instance.orEmpty() + "/"
     val page = remember(sections) { aboutPage(sections) }
+    var webView by remember { mutableStateOf<WebView?>(null) }
+    val scrollToTop = LocalScrollToTop.current
+    LaunchedEffect(scrollToTop) { scrollToTop.collect { webView?.pageUp(true) } }
     key(page) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
@@ -69,6 +74,7 @@ private fun AboutWebView(sections: List<String>) {
                         }
                     }
                     loadDataWithBaseURL(base, page, "text/html", "utf-8", null)
+                    webView = this
                 }
             },
         )

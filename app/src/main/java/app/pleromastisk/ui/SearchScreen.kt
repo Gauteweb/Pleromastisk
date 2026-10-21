@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -55,6 +56,8 @@ fun SearchScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
+    val listState = rememberLazyListState()
+    ScrollToTopOnRequest(listState)
 
     LaunchedEffect(Unit) { if (state.query.isBlank()) focus.requestFocus() }
 
@@ -84,6 +87,7 @@ fun SearchScreen(
 
         LazyColumn(
             Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {

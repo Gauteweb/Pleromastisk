@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -48,6 +49,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.staticCompositionLocalOf
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -160,6 +164,21 @@ fun ErrorPanel(message: String, onRetry: () -> Unit) {
     }
 }
 
+/** Utløses ved dobbelttrykk på toppfeltet: listen som vises ruller helt til toppen. */
+val LocalScrollToTop = staticCompositionLocalOf<SharedFlow<Unit>> { MutableSharedFlow() }
+
+@Composable
+internal fun ScrollToTopOnRequest(listState: LazyListState) {
+    val requests = LocalScrollToTop.current
+    LaunchedEffect(requests, listState) {
+        requests.collect {
+            // Langt nede i listen: hopp først nesten til toppen, så animasjonen blir kort
+            if (listState.firstVisibleItemIndex > 10) listState.scrollToItem(10)
+            listState.animateScrollToItem(0)
+        }
+    }
+}
+
 @Composable
 internal fun LoadingRow() {
     Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -179,6 +198,7 @@ fun StatusFeed(
     val items by vm.items.collectAsStateWithLifecycle()
     val paging by vm.paging.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    ScrollToTopOnRequest(listState)
 
     LaunchedEffect(vm) { vm.ensureLoaded() }
     val nearEnd by remember {
@@ -217,6 +237,7 @@ fun ThreadScreen(statusId: String, vm: ThreadViewModel, actions: StatusActions, 
     val loading by vm.loading.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    ScrollToTopOnRequest(listState)
     var scrolled by remember { mutableStateOf(false) }
 
     LaunchedEffect(vm) { vm.load() }
@@ -295,6 +316,7 @@ fun NotificationsScreen(
     val paging by vm.paging.collectAsStateWithLifecycle()
     val filter by vm.filter.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    ScrollToTopOnRequest(listState)
 
     LaunchedEffect(vm) { vm.ensureLoaded() }
     LaunchedEffect(filter) { listState.scrollToItem(0) }

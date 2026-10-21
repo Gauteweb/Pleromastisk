@@ -3,7 +3,10 @@ package app.pleromastisk.ui
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +54,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -73,6 +79,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import app.pleromastisk.Graph
 import app.pleromastisk.R
 import app.pleromastisk.data.MastoList
 import app.pleromastisk.data.MediaAttachment
@@ -90,6 +97,7 @@ import app.pleromastisk.vm.PagedStatusViewModel
 import app.pleromastisk.vm.StatusListViewModel
 import app.pleromastisk.vm.ThreadViewModel
 import app.pleromastisk.vm.TimelineViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 private const val HOME = "home"
 /** Spesialverdi for «valgt feed» i Hjem: lokal tidslinje (kolliderer ikke med liste-ID-er). */
@@ -155,6 +163,9 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
 
     if (showAbout) AboutDialog(onDismiss = { showAbout = false })
 
+    // Dobbelttrykk på tomt område i toppfeltet ruller listen på skjermen til toppen
+    val scrollToTop = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
+
     // Trykk på #emneknagg i et innlegg åpner emneknaggens tidslinje
     val openTag = remember(nav) { { tag: String -> nav.navigate("tag/${Uri.encode(tag)}") } }
 
@@ -170,6 +181,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                         else -> titleFor(route)
                     },
                     onBack = if (route in TopLevel) null else ({ nav.popBackStack() }),
+                    onDoubleTap = { scrollToTop.tryEmit(Unit) },
                     titleContent = if (route == HOME) { title ->
                         ListMenuTitle(
                             title = title,
@@ -197,7 +209,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
         // Navigasjonsknapper og «skriv»-knappen ligger alltid nederst på siden.
         bottomBar = { if (showChrome) PBottomBar(route, onNavigate = ::go, onCompose = { nav.navigate(COMPOSE_BASE) }) },
     ) { pad ->
-        CompositionLocalProvider(LocalHashtagClick provides openTag) {
+        CompositionLocalProvider(LocalHashtagClick provides openTag, LocalScrollToTop provides scrollToTop) {
         NavHost(
             navController = nav,
             startDestination = HOME,
@@ -336,10 +348,12 @@ private fun titleFor(route: String?): String = stringResource(
 private fun PTopBar(
     title: String,
     onBack: (() -> Unit)?,
+    onDoubleTap: () -> Unit = {},
     titleContent: (@Composable (String) -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    Column {
+    // Knapper og tittelmeny tar sine egne trykk; dobbelttrykk på resten av feltet fanges her
+    Column(Modifier.pointerInput(Unit) { detectTapGestures(onDoubleTap = { onDoubleTap() }) }) {
         TopAppBar(
             title = {
                 if (titleContent != null) titleContent(title)
@@ -360,18 +374,29 @@ private fun PTopBar(
 }
 
 /** Bunnlinje: Hjem · Føderert · Varsler · Søk · [Skriv] · Profil */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: () -> Unit) {
+    // Hold inne en vilkårlig menyknapp for å skjule/vise tekstene under ikonene
+    var compact by remember { mutableStateOf(Graph.store.compactNav) }
+    val haptic = LocalHapticFeedback.current
+    val toggle = {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        compact = !compact
+        Graph.store.compactNav = compact
+    }
     Column(Modifier.fillMaxWidth().background(PT.TopBar)) {
         HorizontalDivider(color = PT.Border)
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().height(58.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavItem(Icons.Filled.Home, R.string.nav_home, route == HOME) { onNavigate(HOME) }
-            NavItem(Icons.Filled.Public, R.string.nav_federated, route == FEDERATED) { onNavigate(FEDERATED) }
-            NavItem(Icons.Filled.Notifications, R.string.nav_notifications, route == NOTIFICATIONS) { onNavigate(NOTIFICATIONS) }
-            NavItem(Icons.Filled.Search, R.string.nav_search, route == SEARCH) { onNavigate(SEARCH) }
+            NavItem(Icons.Filled.Home, R.string.nav_home, route == HOME, compact, toggle) { onNavigate(HOME) }
+            NavItem(Icons.Filled.Public, R.string.nav_federated, route == FEDERATED, compact, toggle) { onNavigate(FEDERATED) }
+            NavItem(Icons.Filled.Notifications, R.string.nav_notifications, route == NOTIFICATIONS, compact, toggle) {
+                onNavigate(NOTIFICATIONS)
+            }
+            NavItem(Icons.Filled.Search, R.string.nav_search, route == SEARCH, compact, toggle) { onNavigate(SEARCH) }
             // «Skriv nytt innlegg»: fremhevet knapp midt i linjen
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
@@ -379,31 +404,40 @@ private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: 
                         .size(46.dp)
                         .background(PT.Link)
                         .border(1.dp, PT.Border)
-                        .clickable(onClick = onCompose),
+                        .combinedClickable(onLongClick = toggle, onClick = onCompose),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Filled.Edit, stringResource(R.string.nav_compose), tint = PT.Fg)
                 }
             }
-            NavItem(Icons.Filled.Person, R.string.nav_profile, route == PROFILE) { onNavigate(PROFILE) }
+            NavItem(Icons.Filled.Person, R.string.nav_profile, route == PROFILE, compact, toggle) { onNavigate(PROFILE) }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RowScope.NavItem(icon: ImageVector, label: Int, selected: Boolean, onClick: () -> Unit) {
+private fun RowScope.NavItem(
+    icon: ImageVector,
+    label: Int,
+    selected: Boolean,
+    compact: Boolean,
+    onLongClick: () -> Unit,
+    onClick: () -> Unit,
+) {
     val tint = if (selected) PT.TopBarText else PT.Link
     Column(
         Modifier
             .weight(1f)
             .fillMaxWidth()
             .height(58.dp)
-            .clickable(onClick = onClick),
+            .combinedClickable(onLongClick = onLongClick, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
     ) {
         Icon(icon, stringResource(label), tint = tint, modifier = Modifier.size(24.dp))
-        Text(stringResource(label), color = tint, fontSize = 10.sp, maxLines = 1)
+        // Uten tekst står ikonet alene, midt mellom topp- og bunnkanten
+        if (!compact) Text(stringResource(label), color = tint, fontSize = 10.sp, maxLines = 1)
     }
 }
 

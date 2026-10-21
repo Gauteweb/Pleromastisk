@@ -62,6 +62,11 @@ class SessionStore(context: Context) {
         get() = sp.getString("language", "nb") ?: "nb"
         set(v) = sp.edit().putString("language", v).apply()
 
+    /** Bunnmenyen uten tekst under ikonene (slås av/på ved å holde inne en menyknapp). */
+    var compactNav: Boolean
+        get() = sp.getBoolean("compact_nav", false)
+        set(v) = sp.edit().putBoolean("compact_nav", v).apply()
+
     fun clear() = sp.edit().clear().apply()
 
     companion object {
