@@ -185,7 +185,35 @@ class AccountViewModel(private val accountId: String) : PagedStatusViewModel() {
         _relationship.value = Graph.api.follow(accountId, !following)
         _account.value = Graph.api.account(accountId)
     }
+
+    /** Mine lister og hvilke av dem kontoen ligger i (null til de er hentet). */
+    private val _lists = MutableStateFlow<ListMembership?>(null)
+    val lists: StateFlow<ListMembership?> = _lists.asStateFlow()
+
+    fun loadLists() = launchAction {
+        _lists.value = null
+        coroutineScope {
+            val all = async { Graph.api.lists() }
+            val mine = async { Graph.api.accountLists(accountId) }
+            _lists.value = ListMembership(all.await().sortedBy { it.title.lowercase() }, mine.await().map { it.id }.toSet())
+        }
+    }
+
+    fun setInList(listId: String, add: Boolean) = launchAction {
+        Graph.api.setInList(listId, accountId, add)
+        _lists.update { m -> m?.copy(memberOf = if (add) m.memberOf + listId else m.memberOf - listId) }
+    }
+
+    fun createListAndAdd(title: String) = launchAction {
+        val list = Graph.api.createList(title.trim())
+        Graph.api.setInList(list.id, accountId, add = true)
+        _lists.update { m ->
+            m?.copy(lists = (m.lists + list).sortedBy { it.title.lowercase() }, memberOf = m.memberOf + list.id)
+        }
+    }
 }
+
+data class ListMembership(val lists: List<MastoList>, val memberOf: Set<String>)
 
 class ThreadViewModel(private val id: String) : StatusListViewModel() {
     private val _loading = MutableStateFlow(true)
@@ -237,6 +265,29 @@ class NotificationsViewModel : ViewModel() {
     private val _filter = MutableStateFlow(NotificationFilter.ALL)
     val filter: StateFlow<NotificationFilter> = _filter.asStateFlow()
 
+    /**
+     * Varsler som er nyere enn det øverste brukeren hadde sett sist hen forlot varselsiden.
+     * Telles ved hver lasting/oppdatering (også første gang), så varsler som kom mens man var
+     * et annet sted – eller mens appen var lukket – kommer med.
+     */
+    private val _newCount = MutableStateFlow(0)
+    val newCount: StateFlow<Int> = _newCount.asStateFlow()
+
+    /** Kalles når brukeren går vekk fra varselsiden: alt som vises nå regnes som sett. */
+    fun markSeen() {
+        if (_filter.value == NotificationFilter.ALL) {
+            _items.value.firstOrNull()?.let { Graph.store.lastSeenNotification = it.id }
+        }
+        _newCount.value = 0
+    }
+
+    private fun countNew(list: List<Notification>): Int {
+        if (_filter.value != NotificationFilter.ALL) return 0
+        val seen = Graph.store.lastSeenNotification ?: return 0 // aldri vært her før
+        val idx = list.indexOfFirst { it.id == seen }
+        return if (idx >= 0) idx else list.size // ikke funnet: alle på første side er nye
+    }
+
     private var refreshJob: Job? = null
     private var moreJob: Job? = null
 
@@ -269,7 +320,9 @@ class NotificationsViewModel : ViewModel() {
             try {
                 val raw = Graph.api.notifications(null, f == NotificationFilter.REPLIES)
                 cursor = raw.lastOrNull()?.id
-                _items.value = raw.filter { matches(it, f) }
+                val fresh = raw.filter { matches(it, f) }
+                _items.value = fresh
+                _newCount.value = countNew(fresh)
                 _paging.update { it.copy(refreshing = false, endReached = raw.isEmpty()) }
             } catch (e: CancellationException) {
                 throw e

@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
@@ -397,6 +398,7 @@ fun NotificationsScreen(
                                 RichText(
                                     target.content, target.emojis,
                                     style = MaterialTheme.typography.bodySmall, color = PT.Muted, maxLines = 4,
+                                    mentions = target.mentions,
                                 )
                             }
                         }
@@ -470,10 +472,20 @@ fun AccountScreen(
                                 r?.requested == true -> R.string.profile_requested
                                 else -> R.string.profile_follow
                             }
-                            PButton(
-                                stringResource(label), { vm.toggleFollow() },
-                                enabled = r != null, filled = r?.following != true && r?.requested != true,
-                            )
+                            var showLists by rememberSaveable { mutableStateOf(false) }
+                            if (showLists) ListMembershipDialog(vm, onDismiss = { showLists = false })
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                PButton(
+                                    stringResource(label), { vm.toggleFollow() },
+                                    enabled = r != null, filled = r?.following != true && r?.requested != true,
+                                )
+                                Spacer(Modifier.weight(1f))
+                                // Legg til i liste – helt til høyre på samme linje som «Følg»
+                                PButton(
+                                    stringResource(R.string.lists_button), { showLists = true },
+                                    icon = Icons.AutoMirrored.Filled.PlaylistAdd,
+                                )
+                            }
                         }
                     }
                 }

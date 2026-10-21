@@ -175,6 +175,18 @@ class ApiClient(private val store: SessionStore) {
 
     suspend fun lists(): List<MastoList> = get("/api/v1/lists")
 
+    /** Listene (av mine) som en konto ligger i. */
+    suspend fun accountLists(accountId: String): List<MastoList> = get("/api/v1/accounts/$accountId/lists")
+
+    suspend fun createList(title: String): MastoList =
+        post("/api/v1/lists", FormBody.Builder().add("title", title).build())
+
+    suspend fun setInList(listId: String, accountId: String, add: Boolean) {
+        val body = FormBody.Builder().add("account_ids[]", accountId).build()
+        val req = builder("/api/v1/lists/$listId/accounts")
+        exec((if (add) req.post(body) else req.delete(body)).build()) { }
+    }
+
     suspend fun customEmojis(): List<Emoji> = get("/api/v1/custom_emojis")
 
     suspend fun accountStatuses(id: String, maxId: String?): List<Status> =

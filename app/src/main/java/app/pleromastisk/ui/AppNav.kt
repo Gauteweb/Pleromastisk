@@ -1,10 +1,17 @@
 package app.pleromastisk.ui
 
+import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -44,10 +51,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +66,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -72,6 +83,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -98,6 +110,7 @@ import app.pleromastisk.vm.StatusListViewModel
 import app.pleromastisk.vm.ThreadViewModel
 import app.pleromastisk.vm.TimelineViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 
 private const val HOME = "home"
 /** Spesialverdi for «valgt feed» i Hjem: lokal tidslinje (kolliderer ikke med liste-ID-er). */
@@ -112,6 +125,44 @@ private const val COMPOSE =
     "compose?replyId={replyId}&replyMentions={replyMentions}&replyVis={replyVis}&editId={editId}"
 
 private val TopLevel = setOf(HOME, FEDERATED, NOTIFICATIONS, SEARCH, PROFILE)
+
+/** Fanene i bunnmenyen, i samme rekkefølge som knappene (brukes ved sveiping). */
+private val TabOrder = listOf(HOME, FEDERATED, NOTIFICATIONS, SEARCH, PROFILE)
+
+/**
+ * Sveip til venstre/høyre på en fane bytter til neste/forrige fane i bunnmenyen.
+ * Loddrett rulling og ting som selv ruller sidelengs har forrang.
+ */
+private fun Modifier.swipeBetweenTabs(route: String?, onNavigate: (String) -> Unit): Modifier {
+    val index = TabOrder.indexOf(route)
+    if (index < 0) return this
+    return pointerInput(route) {
+        val threshold = 80.dp.toPx()
+        var total = 0f
+        detectHorizontalDragGestures(
+            onDragStart = { total = 0f },
+            onHorizontalDrag = { change, dx ->
+                change.consume() // ellers tolkes slutten av sveipet som et trykk på innlegget
+                total += dx
+            },
+            onDragEnd = {
+                val next = when {
+                    total < -threshold -> index + 1
+                    total > threshold -> index - 1
+                    else -> -1
+                }
+                TabOrder.getOrNull(next)?.let(onNavigate)
+            },
+        )
+    }
+}
+
+/** Retning (+1/-1) mellom to faner, eller null når en av dem ikke er en fane. */
+private fun tabDirection(from: NavBackStackEntry, to: NavBackStackEntry): Int? {
+    val a = TabOrder.indexOf(from.destination.route)
+    val b = TabOrder.indexOf(to.destination.route)
+    return if (a < 0 || b < 0 || a == b) null else if (b > a) 1 else -1
+}
 
 @Composable
 fun PleromastiskRoot(auth: AuthViewModel) {
@@ -166,6 +217,26 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
     // Dobbelttrykk på tomt område i toppfeltet ruller listen på skjermen til toppen
     val scrollToTop = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
 
+    // Trykk på @omtale åpner profilen i appen. Ukjent konto slås opp via egen instans;
+    // finnes den ikke der, åpnes lenken i nettleseren som før.
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val openProfileLink = remember(nav) {
+        { id: String?, url: String ->
+            if (id != null) {
+                nav.navigate("account/$id")
+            } else {
+                scope.launch {
+                    val found = runCatching { Graph.api.search(url, "accounts", resolve = true).accounts.firstOrNull() }
+                        .getOrNull()
+                    if (found != null) nav.navigate("account/${found.id}")
+                    else runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+                }
+            }
+            Unit
+        }
+    }
+
     // Trykk på #emneknagg i et innlegg åpner emneknaggens tidslinje
     val openTag = remember(nav) { { tag: String -> nav.navigate("tag/${Uri.encode(tag)}") } }
 
@@ -192,6 +263,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                         )
                     } else null,
                     actions = {
+                        if (route == NOTIFICATIONS) entry?.let { NewNotificationsBadge(viewModel(it)) }
                         if (route == HOME && selectedListId == LOCAL_FEED) {
                             // «Om»-siden til instansen brukeren er logget inn på
                             TextButton(onClick = { nav.navigate(INSTANCE_ABOUT) }) {
@@ -209,11 +281,24 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
         // Navigasjonsknapper og «skriv»-knappen ligger alltid nederst på siden.
         bottomBar = { if (showChrome) PBottomBar(route, onNavigate = ::go, onCompose = { nav.navigate(COMPOSE_BASE) }) },
     ) { pad ->
-        CompositionLocalProvider(LocalHashtagClick provides openTag, LocalScrollToTop provides scrollToTop) {
+        CompositionLocalProvider(
+            LocalHashtagClick provides openTag,
+            LocalProfileLinkClick provides openProfileLink,
+            LocalScrollToTop provides scrollToTop,
+        ) {
         NavHost(
             navController = nav,
             startDestination = HOME,
-            modifier = if (showChrome) Modifier.padding(pad) else Modifier,
+            modifier = (if (showChrome) Modifier.padding(pad) else Modifier).swipeBetweenTabs(route, ::go),
+            // Mellom faner glir siden inn fra siden den ligger på; ellers vanlig toning
+            enterTransition = {
+                tabDirection(initialState, targetState)?.let { dir -> slideInHorizontally { w -> dir * w } }
+                    ?: fadeIn(tween(700))
+            },
+            exitTransition = {
+                tabDirection(initialState, targetState)?.let { dir -> slideOutHorizontally { w -> -dir * w } }
+                    ?: fadeOut(tween(700))
+            },
         ) {
             composable(HOME) {
                 val listId = selectedListId
@@ -244,6 +329,8 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
             }
             composable(NOTIFICATIONS) {
                 val vm: NotificationsViewModel = viewModel()
+                // Telleren for nye varsler nullstilles når man går vekk fra varselsiden
+                DisposableEffect(vm) { onDispose { vm.markSeen() } }
                 NotificationsScreen(
                     vm,
                     onOpenStatus = { nav.navigate("thread/$it") },
@@ -438,6 +525,21 @@ private fun RowScope.NavItem(
         Icon(icon, stringResource(label), tint = tint, modifier = Modifier.size(24.dp))
         // Uten tekst står ikonet alene, midt mellom topp- og bunnkanten
         if (!compact) Text(stringResource(label), color = tint, fontSize = 10.sp, maxLines = 1)
+    }
+}
+
+/** «X nye varsler» øverst til høyre på varselsiden, etter oppdatering. */
+@Composable
+private fun NewNotificationsBadge(vm: NotificationsViewModel) {
+    val count by vm.newCount.collectAsStateWithLifecycle()
+    if (count > 0) {
+        Text(
+            pluralStringResource(R.plurals.new_notifications, count, count),
+            color = PT.TopBarText,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(end = 12.dp),
+        )
     }
 }
 

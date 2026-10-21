@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import app.pleromastisk.data.Emoji
+import app.pleromastisk.data.Mention
 import coil.compose.AsyncImage
 
 private val EmojiRegex = Regex(":([A-Za-z0-9_\\-]+):")
@@ -41,6 +42,8 @@ fun htmlToRich(
     emojis: List<Emoji>,
     linkColor: Color,
     onHashtag: (String) -> Unit = {},
+    mentions: List<Mention> = emptyList(),
+    onProfile: (id: String?, url: String) -> Unit = { _, _ -> },
 ): Pair<AnnotatedString, Map<String, InlineTextContent>> {
     val cleaned = html
         .replace(Regex("<span class=\"invisible\">.*?</span>", RegexOption.DOT_MATCHES_ALL), "")
@@ -56,8 +59,20 @@ fun htmlToRich(
             when (span) {
                 is URLSpan -> {
                     val style = TextLinkStyles(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline))
-                    val tag = hashtagFromLink(span.url, plain.substring(start, end))
-                    if (tag != null) {
+                    val linkText = plain.substring(start, end)
+                    val tag = hashtagFromLink(span.url, linkText)
+                    if (tag == null && (linkText.startsWith("@") || mentions.any { it.url == span.url })) {
+                        // @omtaler åpner profilen i appen (via egen instans) i stedet for nettsiden
+                        val id = mentionFor(span.url, linkText, mentions)?.id
+                        addLink(
+                            LinkAnnotation.Clickable(
+                                tag = "mention:${span.url}",
+                                styles = style,
+                                linkInteractionListener = { onProfile(id, span.url) },
+                            ),
+                            start, end,
+                        )
+                    } else if (tag != null) {
                         // Emneknagger åpnes i appen i stedet for i nettleseren
                         addLink(
                             LinkAnnotation.Clickable(
@@ -88,6 +103,15 @@ fun htmlToRich(
     return withEmojis(base, emojis)
 }
 
+/** Finner omtalen en lenke peker på: først på adresse, deretter på «@navn» / «@navn@domene». */
+internal fun mentionFor(url: String, linkText: String, mentions: List<Mention>): Mention? {
+    mentions.firstOrNull { it.url == url }?.let { return it }
+    val name = linkText.removePrefix("@").trim()
+    if (name.isEmpty()) return null
+    mentions.firstOrNull { it.acct.equals(name, ignoreCase = true) }?.let { return it }
+    return mentions.filter { it.username.equals(name.substringBefore('@'), ignoreCase = true) }.singleOrNull()
+}
+
 fun withEmojis(src: AnnotatedString, emojis: List<Emoji>): Pair<AnnotatedString, Map<String, InlineTextContent>> {
     if (emojis.isEmpty()) return src to emptyMap()
     val byCode = emojis.associateBy { it.shortcode }
@@ -116,6 +140,9 @@ fun withEmojis(src: AnnotatedString, emojis: List<Emoji>): Pair<AnnotatedString,
 /** Lar innlegg åpne en emneknagg-tidslinje når brukeren trykker på #emneknagg. */
 val LocalHashtagClick = staticCompositionLocalOf<(String) -> Unit> { {} }
 
+/** Trykk på en @omtale: konto-ID hvis den er kjent, ellers lenken (slås opp via instansen). */
+val LocalProfileLinkClick = staticCompositionLocalOf<(id: String?, url: String) -> Unit> { { _, _ -> } }
+
 /** HTML-innhold fra et innlegg eller en profil. */
 @Composable
 fun RichText(
@@ -125,9 +152,13 @@ fun RichText(
     style: TextStyle = LocalTextStyle.current,
     color: Color = PT.FgText,
     maxLines: Int = Int.MAX_VALUE,
+    mentions: List<Mention> = emptyList(),
 ) {
     val onHashtag = LocalHashtagClick.current
-    val (text, inline) = remember(html, emojis, onHashtag) { htmlToRich(html, emojis, PT.Link, onHashtag) }
+    val onProfile = LocalProfileLinkClick.current
+    val (text, inline) = remember(html, emojis, onHashtag, mentions, onProfile) {
+        htmlToRich(html, emojis, PT.Link, onHashtag, mentions, onProfile)
+    }
     Text(
         text, modifier, style = style, color = color, maxLines = maxLines,
         overflow = TextOverflow.Ellipsis, inlineContent = inline,

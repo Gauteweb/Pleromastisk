@@ -67,6 +67,11 @@ class SessionStore(context: Context) {
         get() = sp.getBoolean("compact_nav", false)
         set(v) = sp.edit().putBoolean("compact_nav", v).apply()
 
+    /** ID-en til det øverste varselet da brukeren sist forlot varselsiden. */
+    var lastSeenNotification: String?
+        get() = sp.getString("last_seen_notification", null)
+        set(v) = sp.edit().putString("last_seen_notification", v).apply()
+
     fun clear() = sp.edit().clear().apply()
 
     companion object {

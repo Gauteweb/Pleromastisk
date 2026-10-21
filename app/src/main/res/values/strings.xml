@@ -38,6 +38,10 @@
     <string name="about_p4">Appen finnes per nå kun for Android, det er ingen planer for en iOS versjon.</string>
     <string name="about_close">Lukk</string>
     <string name="instance_about_button">Om</string>
+    <plurals name="new_notifications">
+        <item quantity="one">%d nytt varsel</item>
+        <item quantity="other">%d nye varsler</item>
+    </plurals>
     <string name="instance_about_title">Om instansen</string>
     <string name="instance_about_empty">Instansen har ingen «Om»-side.</string>
 
@@ -80,6 +84,11 @@
     <string name="lists_header">Mine lister</string>
     <string name="lists_none">Ingen lister funnet</string>
     <string name="lists_choose">Velg liste</string>
+    <string name="lists_button">Lister</string>
+    <string name="lists_add_title">Legg til i liste</string>
+    <string name="lists_new">Ny liste</string>
+    <string name="lists_new_hint">Navn på listen</string>
+    <string name="lists_create">Lag</string>
 
     <!-- Emojivelger -->
     <string name="compose_emoji">Emojier</string>

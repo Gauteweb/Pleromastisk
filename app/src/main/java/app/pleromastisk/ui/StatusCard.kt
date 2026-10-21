@@ -208,7 +208,10 @@ fun StatusCard(
 
             if (revealed) {
                 if (contentHtml.isNotBlank() && !isBlankHtml(contentHtml)) {
-                    RichText(contentHtml, s.emojis, style = MaterialTheme.typography.bodyMedium, color = PT.Text)
+                    RichText(
+                        contentHtml, s.emojis, style = MaterialTheme.typography.bodyMedium, color = PT.Text,
+                        mentions = s.mentions,
+                    )
                 }
                 MediaGrid(s.mediaAttachments, s.sensitive)
                 s.poll?.let { PollView(s, it, actions) }
