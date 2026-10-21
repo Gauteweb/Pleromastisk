@@ -29,8 +29,10 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 - **Antall og avsender-app:** små tall viser antall svar, delinger og favoritter ved ikonene, og «via <app>» vises på innlegg der instansen oppgir hvilken app de ble postet fra (typisk lokale innlegg). Innlegg du selv har postet fra Pleromastisk viser alltid «via Pleromastisk».
 - **Søk** – egen fane i bunnlinjen. Søk etter brukere (`@navn`, også eksterne `@navn@domene`) og emneknagger (`#emne`). Vanlig tekst søker etter begge deler.
 - **Emneknagger i innlegg** – trykk på en #emneknagg for å se innlegg med den (åpnes i appen).
+- **@omtaler i innlegg** – trykk på et nevnt brukernavn for å åpne profilen i appen, via instansen du er logget inn på.
 - **Profilfelt** – profilens egne felt (metadata) vises i en tabell, med merke for bekreftede lenker.
 - **Tråder og profiler**, inkludert følg/slutt å følge.
+- **Legg til i liste** – «Lister»-knappen til høyre for «Følg» på andres profiler. Kryss av for listene personen skal være med i, eller lag en ny liste med personen i.
 - **Skriv innlegg:** synlighet, innholdsvarsel, bildeopplasting (maks 4), Markdown (hvis
   instansen støtter det) og tegnteller.
 - **Språk på innlegg:** velg Nynorsk (nn), Bokmål (nb) eller Engelsk (en) i skriv-dialogen. Appen husker det siste valget. Språket sendes til instansen som språkmerking av innlegget.
@@ -46,10 +48,11 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
   `max_toot_chars`. Oppgir instansen ingenting, brukes **5000**.
 - **Emojier fra serveren** – egendefinerte emojier vises i innlegg, navn og varsler, og det
   finnes en søkbar emoji-velger (gruppert etter kategori) i skriv-skjermen.
-- **Varsler** (omtaler, delinger, favoritter, følgere, avstemninger, Pleroma-emojireaksjoner m.m.). Filterlinje øverst: **Alle** eller kun **Svar** (svar og omtaler av deg).
+- **Varsler** (omtaler, delinger, favoritter, følgere, avstemninger, Pleroma-emojireaksjoner m.m.). Filterlinje øverst: **Alle** eller kun **Svar** (svar og omtaler av deg). Under «Alle» vises «X nye varsler» øverst til høyre når det har kommet varsler siden sist du var på varselsiden.
 - **Avstemninger** – vis resultater og stem.
 - **Navigasjon og «Skriv»-knapp nederst** på skjermen: Hjem · Føderert · Varsler · Søk · Skriv · Profil.
 - **Kompakt bunnmeny** – hold inne en vilkårlig knapp i bunnmenyen for å skjule tekstene under ikonene. Hold inne igjen for å få dem tilbake. Appen husker valget.
+- **Sveip mellom fanene** – sveip mot venstre eller høyre på Hjem, Føderert, Varsler, Søk og Profil for å gå til neste eller forrige fane.
 - **Til toppen** – dobbelttrykk på et tomt område i toppfeltet for å rulle lista helt til toppen (tidslinjer, profiler, tråder, varsler, søk og «Om instansen»).
 - **Infoboks** (ⓘ øverst til høyre på «Hjem») med opplysninger om appen og lenke til kildekoden.
 - **Om instansen** – i lokal feed er ⓘ byttet ut med en «Om»-knapp. Den viser «Om»-siden til instansen du er logget inn på (instansens egen tekst og tjenestevilkår) inne i appen, med menyene oppe og nede på plass.
