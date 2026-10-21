@@ -49,6 +49,8 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 - **Varsler** (omtaler, delinger, favoritter, følgere, avstemninger, Pleroma-emojireaksjoner m.m.). Filterlinje øverst: **Alle** eller kun **Svar** (svar og omtaler av deg).
 - **Avstemninger** – vis resultater og stem.
 - **Navigasjon og «Skriv»-knapp nederst** på skjermen: Hjem · Føderert · Varsler · Søk · Skriv · Profil.
+- **Kompakt bunnmeny** – hold inne en vilkårlig knapp i bunnmenyen for å skjule tekstene under ikonene. Hold inne igjen for å få dem tilbake. Appen husker valget.
+- **Til toppen** – dobbelttrykk på et tomt område i toppfeltet for å rulle lista helt til toppen (tidslinjer, profiler, tråder, varsler, søk og «Om instansen»).
 - **Infoboks** (ⓘ øverst til høyre på «Hjem») med opplysninger om appen og lenke til kildekoden.
 - **Om instansen** – i lokal feed er ⓘ byttet ut med en «Om»-knapp. Den viser «Om»-siden til instansen du er logget inn på (instansens egen tekst og tjenestevilkår) inne i appen, med menyene oppe og nede på plass.
 
