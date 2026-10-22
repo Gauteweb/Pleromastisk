@@ -130,10 +130,8 @@ I praksis betyr det:
 
 Programmet leveres **uten noen form for garanti**, se avsnitt 15 og 16 i lisensen.
 
-**Bakgrunnsbildet** (`app/src/main/res/drawable-nodpi/bakgrunn.jpg`) er hentet fra
-[wallhaven.cc](https://wallhaven.cc) og **er ikke dekket av denne lisensen**. Opphavsretten
-tilhører kunstneren eller rettighetshaveren, ikke Pleromastisk. Bytt det ut med et bilde du
-har rett til å bruke dersom du viderefordeler appen.
+**Bakgrunnsbildet** (`app/src/main/res/drawable-nodpi/bakgrunn.jpg`) er tatt av
+Gaute Holmin og er lisensiert under den samme lisensen som resten av appen (GPL-3.0-or-later).
 
 Tredjepartsbiblioteker (Jetpack Compose, OkHttp, Coil, kotlinx.serialization m.fl.) er
 Apache-2.0-lisensiert og følger sine egne vilkår.
