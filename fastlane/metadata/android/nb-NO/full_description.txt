@@ -1,0 +1,20 @@
+<p>Pleromastisk er en Android-app for <a href="https://pleroma.social">Pleroma</a>-instanser, med norsk grensesnitt og et eget mørkt, blågrønt tema. Appen er laget for social.gaute.space, men fungerer mot andre Pleroma-instanser og i prinsippet andre tjenere med Mastodon-kompatibelt API.</p>
+
+<p><b>Funksjoner</b></p>
+<ul>
+<li>Innlogging via OAuth – passordet ditt går aldri via appen</li>
+<li>Tidslinjer: Hjem, Lokalt, Føderert og egne lister</li>
+<li>Svar, del, favoritt, bokmerke, rediger og slett egne innlegg</li>
+<li>Skriv innlegg med synlighet, innholdsvarsel, opptil 4 bilder med alt-tekst, Markdown og språkmerking (nn, nb, en)</li>
+<li>Egendefinerte emojier fra instansen, med søkbar emoji-velger</li>
+<li>Bildevisning med zoom og alt-tekst, forhåndsbilde av video og lenkeforhåndsvisning</li>
+<li>Søk etter brukere og emneknagger</li>
+<li>Tråder, profiler med profilfelt, følg/slutt å følge og legg til i liste</li>
+<li>Varsler, inkludert Pleroma-emojireaksjoner, og avstemninger</li>
+<li>Sveip mellom faner, kompakt bunnmeny og dobbelttrykk for å gå til toppen</li>
+<li>«Om instansen» med instansens egen tekst og tjenestevilkår</li>
+</ul>
+
+<p><b>Ikke med ennå:</b> søk i innleggstekst, chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil, flere kontoer og avspilling av video i appen.</p>
+
+<p><b>Personvern:</b> Appen har ingen sporing eller analyse. Den snakker bare med instansen du velger, og tilgangstokenet lagres kun lokalt på enheten.</p>

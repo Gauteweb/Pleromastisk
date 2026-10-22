@@ -1,0 +1,1 @@
+Norsk klient for Pleroma og andre tjenere med Mastodon-kompatibelt API

@@ -1,0 +1,4 @@
+- Sveip mellom fanene
+- Lister på andres profiler: legg til personen i lister, eller lag en ny
+- Trykk på @omtaler for å åpne profilen i appen
+- Varsler: filter for Alle eller kun Svar, og «X nye varsler»

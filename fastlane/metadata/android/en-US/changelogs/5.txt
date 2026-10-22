@@ -1,0 +1,4 @@
+- Swipe between tabs
+- Lists on other people's profiles: add them to lists or create a new one
+- Tap @mentions to open the profile in the app
+- Notifications: filter for All or Replies only, and an "X new notifications" counter
