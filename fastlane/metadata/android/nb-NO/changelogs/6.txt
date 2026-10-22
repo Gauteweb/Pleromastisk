@@ -1,0 +1,2 @@
+- Ny lisens: GPL-3.0-or-later. Pleromastisk er nå fri programvare
+- Nytt bakgrunnsbilde

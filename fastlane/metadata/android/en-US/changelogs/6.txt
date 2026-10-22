@@ -1,0 +1,2 @@
+- New license: GPL-3.0-or-later. Pleromastisk is now free software
+- New background image
