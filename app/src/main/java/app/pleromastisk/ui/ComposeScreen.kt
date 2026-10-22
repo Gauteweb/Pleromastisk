@@ -334,9 +334,14 @@ fun ComposeScreen(
                 )
                 Text(
                     stringResource(R.string.char_counter, length, maxChars),
-                    color = if (over) PT.Orange else PT.Muted,
+                    // Boks i samme stil som «Skriv»-knappen, så telleren synes uansett bakgrunnsbilde
+                    color = PT.Fg,
                     fontWeight = if (over) FontWeight.Bold else FontWeight.Normal,
-                    modifier = Modifier.align(Alignment.End),
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .background(if (over) PT.Orange else PT.Link)
+                        .border(1.dp, PT.Border)
+                        .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
                 if (attachments.isNotEmpty()) {
                     Row(
