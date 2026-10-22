@@ -115,21 +115,20 @@ enheten, og «Logg ut» sletter det.
 
 ## Lisens
 
-Koden er lisensiert under
-[**Creative Commons Navngivelse-IkkeKommersiell 4.0 (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/deed.no).
+Copyright © 2026 Gaute Holmin
+
+Pleromastisk er fri programvare, lisensiert under
+[**GNU General Public License versjon 3 eller senere (GPL-3.0-or-later)**](https://www.gnu.org/licenses/gpl-3.0.html).
 Fullstendig tekst ligger i [`LICENSE`](LICENSE).
 
 I praksis betyr det:
 
-- ✅ Du kan kopiere, endre og dele koden.
-- ✅ Du må **kreditere Gaute Holmin** som opprinnelig opphavsperson, oppgi lenke til
-  dette repoet og opplyse om du har gjort endringer.
-- ❌ Du kan **ikke bruke den kommersielt**, for eksempel selge appen eller koden.
+- ✅ Du kan bruke, kopiere, endre og dele appen og koden, også kommersielt.
+- ✅ Deler du appen eller en endret versjon av den, må du gjøre **kildekoden tilgjengelig
+  under samme lisens** (GPL-3.0-or-later), og beholde opphavsrettsmerknadene.
+- ❌ Du kan **ikke** lage en lukket versjon av appen eller koden og distribuere den.
 
-Merk: CC BY-NC er ikke en «åpen kildekode»-lisens etter definisjonen til Open Source
-Initiative, fordi den forbyr kommersiell bruk. Koden er likevel åpen for innsyn, læring og
-ikke-kommersiell gjenbruk. Creative Commons anbefaler egentlig ikke sine lisenser for
-programvare, blant annet fordi de ikke har noen eksplisitt patentklausul.
+Programmet leveres **uten noen form for garanti**, se avsnitt 15 og 16 i lisensen.
 
 **Bakgrunnsbildet** (`app/src/main/res/drawable-nodpi/bakgrunn.jpg`) er hentet fra
 [wallhaven.cc](https://wallhaven.cc) og **er ikke dekket av denne lisensen**. Opphavsretten
