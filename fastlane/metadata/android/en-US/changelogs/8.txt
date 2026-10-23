@@ -1,0 +1,3 @@
+- Chat: the chat icon at the top right of Home opens chat.gaute.space in the app, in the app's colours. The chat is the Matrix client Cinny (cinny.in)
+- Double-tap a button in the bottom menu to reload the feed
+- The info button (ⓘ) has moved from Home to Profile

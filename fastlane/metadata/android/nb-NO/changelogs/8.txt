@@ -1,0 +1,3 @@
+- Chat: chat-ikonet øverst til høyre på Hjem åpner chat.gaute.space i appen, med appens farger. Chatten er Matrix-klienten Cinny (cinny.in)
+- Dobbelttrykk på en knapp i bunnmenyen laster feeden på nytt
+- Infoknappen (ⓘ) er flyttet fra Hjem til Profil
