@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
@@ -67,6 +68,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -120,6 +122,7 @@ private const val NOTIFICATIONS = "notifications"
 private const val SEARCH = "search"
 private const val PROFILE = "profile"
 private const val INSTANCE_ABOUT = "instance_about"
+private const val CHAT = "chat"
 private const val COMPOSE_BASE = "compose"
 private const val COMPOSE =
     "compose?replyId={replyId}&replyMentions={replyMentions}&replyVis={replyVis}&editId={editId}"
@@ -190,6 +193,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
     val lists by listsVm.lists.collectAsStateWithLifecycle()
     var selectedListId by rememberSaveable { mutableStateOf<String?>(null) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
+    val chat = rememberChatSession()
     val selectedList = lists.firstOrNull { it.id == selectedListId }
 
     fun go(target: String) = nav.navigate(target) {
@@ -216,6 +220,8 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
 
     // Dobbelttrykk på tomt område i toppfeltet ruller listen på skjermen til toppen
     val scrollToTop = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
+    // Dobbelttrykk på en menyknapp nederst ruller til toppen og laster feeden på nytt
+    val refreshRequests = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
 
     // Trykk på @omtale åpner profilen i appen. Ukjent konto slås opp via egen instans;
     // finnes den ikke der, åpnes lenken i nettleseren som før.
@@ -270,6 +276,11 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                                 Text(stringResource(R.string.instance_about_button), color = PT.TopBarText)
                             }
                         } else if (route == HOME) {
+                            IconButton(onClick = { nav.navigate(CHAT) }) {
+                                Icon(Icons.AutoMirrored.Filled.Chat, stringResource(R.string.chat_button), tint = PT.TopBarText)
+                            }
+                        }
+                        if (route == PROFILE) {
                             IconButton(onClick = { showAbout = true }) {
                                 Icon(Icons.Filled.Info, stringResource(R.string.about_button), tint = PT.TopBarText)
                             }
@@ -279,12 +290,18 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
             }
         },
         // Navigasjonsknapper og «skriv»-knappen ligger alltid nederst på siden.
-        bottomBar = { if (showChrome) PBottomBar(route, onNavigate = ::go, onCompose = { nav.navigate(COMPOSE_BASE) }) },
+        bottomBar = { if (showChrome) PBottomBar(
+                route,
+                onNavigate = ::go,
+                onDoubleTap = { scrollToTop.tryEmit(Unit); refreshRequests.tryEmit(Unit) },
+                onCompose = { nav.navigate(COMPOSE_BASE) },
+            ) },
     ) { pad ->
         CompositionLocalProvider(
             LocalHashtagClick provides openTag,
             LocalProfileLinkClick provides openProfileLink,
             LocalScrollToTop provides scrollToTop,
+            LocalRefreshRequests provides refreshRequests,
         ) {
         NavHost(
             navController = nav,
@@ -359,6 +376,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                 )
             }
             composable(INSTANCE_ABOUT) { InstanceAboutScreen() }
+            composable(CHAT) { ChatScreen(chat) }
             composable("tag/{tag}", arguments = listOf(navArgument("tag") { type = NavType.StringType })) { e ->
                 val tag = e.arguments?.getString("tag").orEmpty()
                 val vm: TagViewModel = viewModel(
@@ -425,6 +443,7 @@ private fun titleFor(route: String?): String = stringResource(
         route == SEARCH -> R.string.title_search
         route == PROFILE -> R.string.title_profile
         route == INSTANCE_ABOUT -> R.string.instance_about_title
+        route == CHAT -> R.string.title_chat
         route?.startsWith("thread") == true -> R.string.title_thread
         else -> R.string.title_account
     },
@@ -463,7 +482,12 @@ private fun PTopBar(
 /** Bunnlinje: Hjem · Føderert · Varsler · Søk · [Skriv] · Profil */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: () -> Unit) {
+private fun PBottomBar(
+    route: String?,
+    onNavigate: (String) -> Unit,
+    onDoubleTap: () -> Unit,
+    onCompose: () -> Unit,
+) {
     // Hold inne en vilkårlig menyknapp for å skjule/vise tekstene under ikonene
     var compact by remember { mutableStateOf(Graph.store.compactNav) }
     val haptic = LocalHapticFeedback.current
@@ -472,18 +496,32 @@ private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: 
         compact = !compact
         Graph.store.compactNav = compact
     }
+    // Første trykk navigerer med en gang; et nytt trykk på samme knapp like etter er et dobbelttrykk
+    val doubleTapTimeout = LocalViewConfiguration.current.doubleTapTimeoutMillis
+    var lastTap by remember { mutableStateOf<Pair<String, Long>?>(null) }
+    val tap = { target: String ->
+        val now = System.currentTimeMillis()
+        val prev = lastTap
+        onNavigate(target)
+        if (prev != null && prev.first == target && now - prev.second <= doubleTapTimeout) {
+            lastTap = null
+            onDoubleTap()
+        } else {
+            lastTap = target to now
+        }
+    }
     Column(Modifier.fillMaxWidth().background(PT.TopBar)) {
         HorizontalDivider(color = PT.Border)
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().height(58.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavItem(Icons.Filled.Home, R.string.nav_home, route == HOME, compact, toggle) { onNavigate(HOME) }
-            NavItem(Icons.Filled.Public, R.string.nav_federated, route == FEDERATED, compact, toggle) { onNavigate(FEDERATED) }
+            NavItem(Icons.Filled.Home, R.string.nav_home, route == HOME, compact, toggle) { tap(HOME) }
+            NavItem(Icons.Filled.Public, R.string.nav_federated, route == FEDERATED, compact, toggle) { tap(FEDERATED) }
             NavItem(Icons.Filled.Notifications, R.string.nav_notifications, route == NOTIFICATIONS, compact, toggle) {
-                onNavigate(NOTIFICATIONS)
+                tap(NOTIFICATIONS)
             }
-            NavItem(Icons.Filled.Search, R.string.nav_search, route == SEARCH, compact, toggle) { onNavigate(SEARCH) }
+            NavItem(Icons.Filled.Search, R.string.nav_search, route == SEARCH, compact, toggle) { tap(SEARCH) }
             // «Skriv nytt innlegg»: fremhevet knapp midt i linjen
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
@@ -497,7 +535,7 @@ private fun PBottomBar(route: String?, onNavigate: (String) -> Unit, onCompose: 
                     Icon(Icons.Filled.Edit, stringResource(R.string.nav_compose), tint = PT.Fg)
                 }
             }
-            NavItem(Icons.Filled.Person, R.string.nav_profile, route == PROFILE, compact, toggle) { onNavigate(PROFILE) }
+            NavItem(Icons.Filled.Person, R.string.nav_profile, route == PROFILE, compact, toggle) { tap(PROFILE) }
         }
     }
 }

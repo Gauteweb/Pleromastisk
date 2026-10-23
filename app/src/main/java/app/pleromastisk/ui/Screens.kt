@@ -57,6 +57,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -180,6 +181,16 @@ internal fun ScrollToTopOnRequest(listState: LazyListState) {
     }
 }
 
+/** Utløses ved dobbelttrykk på en menyknapp nederst: feeden som vises lastes på nytt. */
+val LocalRefreshRequests = staticCompositionLocalOf<SharedFlow<Unit>> { MutableSharedFlow() }
+
+@Composable
+internal fun RefreshOnRequest(onRefresh: () -> Unit) {
+    val requests = LocalRefreshRequests.current
+    val latest by rememberUpdatedState(onRefresh)
+    LaunchedEffect(requests) { requests.collect { latest() } }
+}
+
 @Composable
 internal fun LoadingRow() {
     Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -200,6 +211,7 @@ fun StatusFeed(
     val paging by vm.paging.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     ScrollToTopOnRequest(listState)
+    RefreshOnRequest { vm.refresh() }
 
     LaunchedEffect(vm) { vm.ensureLoaded() }
     val nearEnd by remember {
@@ -318,6 +330,7 @@ fun NotificationsScreen(
     val filter by vm.filter.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     ScrollToTopOnRequest(listState)
+    RefreshOnRequest { vm.refresh() }
 
     LaunchedEffect(vm) { vm.ensureLoaded() }
     LaunchedEffect(filter) { listState.scrollToItem(0) }

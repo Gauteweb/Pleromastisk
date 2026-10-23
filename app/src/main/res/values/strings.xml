@@ -31,6 +31,8 @@
 
     <!-- Om appen -->
     <string name="about_button">Om appen</string>
+    <string name="chat_button">Chat</string>
+    <string name="title_chat">Chat</string>
     <string name="about_title">Om Pleromastisk</string>
     <string name="about_p1">Denne appen er utviklet med Claude av Gaute Holmin for bruk med Pleroma Social.</string>
     <string name="about_p2">Det er ikke et mål å ha all funksjonalitet i appen som i Pleroma Social, men nok til å gi et brukervennlig og enkelt grensesnitt for de mest vanlige behovene.</string>

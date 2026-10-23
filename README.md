@@ -53,13 +53,15 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 - **Navigasjon og «Skriv»-knapp nederst** på skjermen: Hjem · Føderert · Varsler · Søk · Skriv · Profil.
 - **Kompakt bunnmeny** – hold inne en vilkårlig knapp i bunnmenyen for å skjule tekstene under ikonene. Hold inne igjen for å få dem tilbake. Appen husker valget.
 - **Sveip mellom fanene** – sveip mot venstre eller høyre på Hjem, Føderert, Varsler, Søk og Profil for å gå til neste eller forrige fane.
+- **Oppdater med dobbelttrykk** – dobbelttrykk på Hjem, Føderert, Varsler eller Profil i bunnmenyen for å laste feeden på nytt og rulle til toppen.
+- **Chat** – chat-ikonet øverst til høyre på «Hjem» åpner [chat.gaute.space](https://chat.gaute.space) inne i appen, med bunnmenyen på plass. Chatten er Matrix-klienten [Cinny](https://cinny.in), vist med appens farger. Forbindelsen holdes i live når du bytter faner, og du kan laste opp bilder.
 - **Til toppen** – dobbelttrykk på et tomt område i toppfeltet for å rulle lista helt til toppen (tidslinjer, profiler, tråder, varsler, søk og «Om instansen»).
-- **Infoboks** (ⓘ øverst til høyre på «Hjem») med opplysninger om appen og lenke til kildekoden.
-- **Om instansen** – i lokal feed er ⓘ byttet ut med en «Om»-knapp. Den viser «Om»-siden til instansen du er logget inn på (instansens egen tekst og tjenestevilkår) inne i appen, med menyene oppe og nede på plass.
+- **Infoboks** (ⓘ øverst til høyre på «Profil») med opplysninger om appen og lenke til kildekoden.
+- **Om instansen** – i lokal feed er chat-ikonet byttet ut med en «Om»-knapp. Den viser «Om»-siden til instansen du er logget inn på (instansens egen tekst og tjenestevilkår) inne i appen, med menyene oppe og nede på plass.
 
 ### Ikke med (ennå)
 
-Søk i innleggstekst, chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil,
+Søk i innleggstekst, Pleroma-chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil,
 flere kontoer og avspilling av video i appen (åpnes i en annen app).
 
 ## Installere
@@ -96,6 +98,7 @@ gamle, ellers må du avinstallere først.
 | Nettverk | OkHttp + kotlinx.serialization |
 | Bilder | Coil |
 | Navigasjon | Navigation Compose |
+| Chat | Android WebView med [Cinny](https://cinny.in) fra chat.gaute.space |
 | API | Mastodon-kompatibelt API (`/api/v1/...`) som Pleroma implementerer |
 | Redirect-skjema | `pleromastisk://oauth` |
 | OAuth-scopes | `read write follow push` |
@@ -112,6 +115,10 @@ Kildekoden ligger i `app/src/main/java/app/pleromastisk/`:
 Appen har ingen sporing eller analyse. Den snakker bare med instansen du velger, og henter
 bilder og emojier fra adressene instansen oppgir. Tilgangstoken lagres kun lokalt på
 enheten, og «Logg ut» sletter det.
+
+Åpner du chatten, lastes Cinny fra chat.gaute.space, og den snakker med Matrix-tjeneren du
+logger inn på der (som standard norge.chat). Innloggingen i chatten lagres i appens egen
+nettleserlagring på enheten og er uavhengig av Pleroma-innloggingen.
 
 ## Lisens
 
@@ -132,6 +139,11 @@ Programmet leveres **uten noen form for garanti**, se avsnitt 15 og 16 i lisense
 
 **Bakgrunnsbildet** (`app/src/main/res/drawable-nodpi/bakgrunn.jpg`) er tatt av
 Gaute Holmin og er lisensiert under den samme lisensen som resten av appen (GPL-3.0-or-later).
+
+**Chatten** er [Cinny](https://cinny.in) ([kildekode](https://github.com/cinnyapp/cinny)),
+en Matrix-klient laget av Ajay Bura og bidragsyterne til Cinny-prosjektet, lisensiert under
+AGPL-3.0. Cinny er ikke en del av appen: den kjører på chat.gaute.space og vises i appen,
+som legger på egne farger.
 
 Tredjepartsbiblioteker (Jetpack Compose, OkHttp, Coil, kotlinx.serialization m.fl.) er
 Apache-2.0-lisensiert og følger sine egne vilkår.
