@@ -1,0 +1,1 @@
+- Chat: skrivefeltet havner ikke lenger bak tastaturet når du skriver en melding
