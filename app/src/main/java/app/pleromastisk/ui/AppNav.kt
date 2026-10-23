@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -306,7 +307,8 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
         NavHost(
             navController = nav,
             startDestination = HOME,
-            modifier = (if (showChrome) Modifier.padding(pad) else Modifier).swipeBetweenTabs(route, ::go),
+            // consumeWindowInsets: imePadding() på sidene trekker fra bunnmenyen, som tastaturet uansett dekker
+            modifier = (if (showChrome) Modifier.padding(pad).consumeWindowInsets(pad) else Modifier).swipeBetweenTabs(route, ::go),
             // Mellom faner glir siden inn fra siden den ligger på; ellers vanlig toning
             enterTransition = {
                 tabDirection(initialState, targetState)?.let { dir -> slideInHorizontally { w -> dir * w } }

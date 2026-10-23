@@ -14,6 +14,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -135,7 +136,8 @@ fun ChatScreen(session: ChatSession) {
     BackHandler(enabled = session.canGoBack) { session.webView?.goBack() }
 
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+        // Siden krymper over tastaturet, så skrivefeltet i Cinny ikke havner bak det
+        modifier = Modifier.fillMaxSize().imePadding(),
         factory = { ctx ->
             // Samme WebView som sist, flyttet hit fra der den ble vist forrige gang
             session.webView?.also { (it.parent as? ViewGroup)?.removeView(it) }
