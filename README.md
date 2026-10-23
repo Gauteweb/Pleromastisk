@@ -8,10 +8,6 @@ skarpe hjørner, tynn tan kantlinje, mørke blågrønne flater og et eget bakgru
 Appen er laget for [social.gaute.space](https://social.gaute.space), men skal fungere mot
 andre Pleroma-instanser (og i prinsippet andre tjenere med Mastodon-kompatibelt API).
 
-> **Status:** Første versjon. Koden kompilerer og API-kall er kontrollert mot
-> social.gaute.space, men appen er ennå ikke systematisk testet på fysiske enheter.
-> Forvent rare kanter, og meld gjerne fra om feil.
-
 ## Skjermbilder
 
 Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per nå kun for Android.
@@ -20,44 +16,33 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 
 ## Funksjoner
 
-- **Innlogging via OAuth** – du skriver inn instansadresse og godkjenner appen på instansens
-  egen innloggingsside. Passordet ditt går aldri via appen.
-- **Tidslinjer:** Hjem, Lokalt og Fødererte, med pull-to-refresh og automatisk «hent flere».
-- **Lokal feed og egne lister** – nedtrekksmenyen «Hjem ▾» i toppen av «Hjem» bytter mellom hjemmetidslinjen, lokal feed og listene dine.
-- **Innlegg:** svar, del, favoritt, bokmerke, kopier lenke, åpne i nettleser og slett egne.
-- **Lenkeforhåndsvisning** – innlegg med en lenke viser bilde og sidetittel i en boks som er klikkbar. Lenken skjules i teksten når den står alene på sin egen linje. Forhåndsvisningen lages av instansen, ikke av appen.
-- **Antall og avsender-app:** små tall viser antall svar, delinger og favoritter ved ikonene, og «via <app>» vises på innlegg der instansen oppgir hvilken app de ble postet fra (typisk lokale innlegg). Innlegg du selv har postet fra Pleromastisk viser alltid «via Pleromastisk».
-- **Søk** – egen fane i bunnlinjen. Søk etter brukere (`@navn`, også eksterne `@navn@domene`) og emneknagger (`#emne`). Vanlig tekst søker etter begge deler.
-- **Emneknagger i innlegg** – trykk på en #emneknagg for å se innlegg med den (åpnes i appen).
-- **@omtaler i innlegg** – trykk på et nevnt brukernavn for å åpne profilen i appen, via instansen du er logget inn på.
-- **Profilfelt** – profilens egne felt (metadata) vises i en tabell, med merke for bekreftede lenker.
-- **Tråder og profiler**, inkludert følg/slutt å følge.
-- **Legg til i liste** – «Lister»-knappen til høyre for «Følg» på andres profiler. Kryss av for listene personen skal være med i, eller lag en ny liste med personen i.
-- **Skriv innlegg:** synlighet, innholdsvarsel, bildeopplasting (maks 4), Markdown (hvis
-  instansen støtter det) og tegnteller.
-- **Språk på innlegg:** velg Nynorsk (nn), Bokmål (nb) eller Engelsk (en) i skriv-dialogen. Appen husker det siste valget. Språket sendes til instansen som språkmerking av innlegget.
-- **Alt-tekst:** trykk på et vedlagt bilde i skriv-skjermen for å legge inn en beskrivelse
-  (grensen hentes fra instansen). Et ALT-merke på bildet viser om teksten er satt.
-- **Rediger innlegg:** «mer»-menyen (⋮) på egne innlegg har «Rediger» når instansen støtter
-  det. Tekst, innholdsvarsel, vedlegg og alt-tekst kan endres, ikke synligheten. Redigerte
-  innlegg merkes «redigert».
-- **Bildevisning med alt-tekst** – trykk på et bilde for å åpne det i full størrelse med alt-teksten under. Klyp eller dobbelttrykk for å zoome. Sveip mellom flere bilder. Bilder med alt-tekst har et ALT-merke.
-- **Bilder vises fullt ut** i tidslinjene – uten beskjæring og tilpasset skjermbredden.
-- **Forhåndsbilde av video** – innlegg med video viser et stillbilde fra videoen med en play-knapp over. Har ikke instansen laget et eget forhåndsbilde, henter appen et bilde fra selve videoen. Trykk for å spille av videoen i en annen app.
-- **Tegngrense fra instansen** – leses fra `configuration.statuses.max_characters`, deretter
-  `max_toot_chars`. Oppgir instansen ingenting, brukes **5000**.
-- **Emojier fra serveren** – egendefinerte emojier vises i innlegg, navn og varsler, og det
-  finnes en søkbar emoji-velger (gruppert etter kategori) i skriv-skjermen.
-- **Varsler** (omtaler, delinger, favoritter, følgere, avstemninger, Pleroma-emojireaksjoner m.m.). Filterlinje øverst: **Alle** eller kun **Svar** (svar og omtaler av deg). Under «Alle» vises «X nye varsler» øverst til høyre når det har kommet varsler siden sist du var på varselsiden.
-- **Avstemninger** – vis resultater og stem.
-- **Navigasjon og «Skriv»-knapp nederst** på skjermen: Hjem · Føderert · Varsler · Søk · Skriv · Profil.
-- **Kompakt bunnmeny** – hold inne en vilkårlig knapp i bunnmenyen for å skjule tekstene under ikonene. Hold inne igjen for å få dem tilbake. Appen husker valget.
-- **Sveip mellom fanene** – sveip mot venstre eller høyre på Hjem, Føderert, Varsler, Søk og Profil for å gå til neste eller forrige fane.
-- **Oppdater med dobbelttrykk** – dobbelttrykk på Hjem, Føderert, Varsler eller Profil i bunnmenyen for å laste feeden på nytt og rulle til toppen.
-- **Chat** – chat-ikonet øverst til høyre på «Hjem» åpner [chat.gaute.space](https://chat.gaute.space) inne i appen, med bunnmenyen på plass. Chatten er Matrix-klienten [Cinny](https://cinny.in), vist med appens farger. Forbindelsen holdes i live når du bytter faner, og du kan laste opp bilder.
-- **Til toppen** – dobbelttrykk på et tomt område i toppfeltet for å rulle lista helt til toppen (tidslinjer, profiler, tråder, varsler, søk og «Om instansen»).
-- **Infoboks** (ⓘ øverst til høyre på «Profil») med opplysninger om appen og lenke til kildekoden.
-- **Om instansen** – i lokal feed er chat-ikonet byttet ut med en «Om»-knapp. Den viser «Om»-siden til instansen du er logget inn på (instansens egen tekst og tjenestevilkår) inne i appen, med menyene oppe og nede på plass.
+**Lese**
+- Innlogging med OAuth på instansens egen side – passordet går aldri via appen.
+- Tidslinjer: Hjem, lokal feed, Føderert og egne lister (velg i «Hjem ▾»).
+- Tråder, profiler med profilfelt og bekreftede lenker, og følg/slutt å følge.
+- Lenkeforhåndsvisning, antall svar/delinger/favoritter og «via <app>».
+- Egendefinerte emojier fra instansen, avstemninger og varsler med filter for **Alle** eller **Svar**.
+- Søk etter brukere (`@navn@domene`) og emneknagger. Trykk på #emneknagger og @omtaler for å åpne dem i appen.
+
+**Skrive og samhandle**
+- Svar, del, favoritt, bokmerke, kopier lenke og slett eller rediger egne innlegg.
+- Synlighet, innholdsvarsel, opptil 4 bilder med alt-tekst, Markdown, emoji-velger og språkvalg (nn, nb, en).
+- Tegngrensen hentes fra instansen (5000 hvis den ikke oppgir noe).
+- Legg brukere til i lister fra profilen deres.
+
+**Bilder og video**
+- Bilder vises uten beskjæring. Trykk for fullskjerm med alt-tekst, zoom og sveip mellom bilder.
+- Video vises med forhåndsbilde og spilles av i en annen app.
+
+**Navigasjon**
+- Bunnmeny: Hjem · Føderert · Varsler · Søk · Skriv · Profil. Hold inne en knapp for å skjule tekstene.
+- Sveip mellom fanene. Dobbelttrykk på en fane for å oppdatere, eller på toppfeltet for å rulle til toppen.
+
+**Chat og annet**
+- Chat-ikonet på «Hjem» åpner [chat.gaute.space](https://chat.gaute.space) i appen – Matrix-klienten
+  [Cinny](https://cinny.in) med appens farger. Forbindelsen holdes i live når du bytter faner.
+- «Om»-knappen i lokal feed viser instansens «Om»-side og tjenestevilkår.
+- ⓘ på «Profil» viser informasjon om appen og lenke til kildekoden.
 
 ### Ikke med (ennå)
 
