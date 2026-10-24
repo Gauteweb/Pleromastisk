@@ -18,6 +18,7 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 
 **Lese**
 - Innlogging med OAuth på instansens egen side – passordet går aldri via appen.
+- Flere brukere, også på ulike instanser. Bytt med «Bytt bruker» på profilsiden.
 - Tidslinjer: Hjem, lokal feed, Føderert og egne lister (velg i «Hjem ▾»).
 - Tråder, profiler med profilfelt og bekreftede lenker, og følg/slutt å følge.
 - Lenkeforhåndsvisning, antall svar/delinger/favoritter og «via <app>».
@@ -46,8 +47,8 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 
 ### Ikke med (ennå)
 
-Søk i innleggstekst, Pleroma-chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil,
-flere kontoer og avspilling av video i appen (åpnes i en annen app).
+Søk i innleggstekst, Pleroma-chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil
+og avspilling av video i appen (åpnes i en annen app).
 
 ## Installere
 
@@ -99,7 +100,7 @@ Kildekoden ligger i `app/src/main/java/app/pleromastisk/`:
 
 Appen har ingen sporing eller analyse. Den snakker bare med instansen du velger, og henter
 bilder og emojier fra adressene instansen oppgir. Tilgangstoken lagres kun lokalt på
-enheten, og «Logg ut» sletter det.
+enheten, og «Logg ut» sletter det for brukeren du er logget inn som.
 
 Åpner du chatten, lastes Cinny fra chat.gaute.space, og den snakker med Matrix-tjeneren du
 logger inn på der (som standard norge.chat). Innloggingen i chatten lagres i appens egen

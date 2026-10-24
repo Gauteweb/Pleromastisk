@@ -62,6 +62,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -83,6 +85,9 @@ private data class Attachment(
 )
 
 private val Visibilities = listOf("public", "unlisted", "private", "direct")
+
+/** Stor forbokstav i starten av hver setning og hver ny linje (tastaturet tar seg av det). */
+private val SentenceCase = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
 
 @Composable
 private fun languageName(code: String): String = stringResource(
@@ -321,6 +326,7 @@ fun ComposeScreen(
                         value = cw, onValueChange = { cw = it },
                         label = { Text(stringResource(R.string.compose_cw_label)) },
                         singleLine = true, shape = RectangleShape, colors = ptFieldColors(),
+                        keyboardOptions = SentenceCase,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -329,6 +335,7 @@ fun ComposeScreen(
                     placeholder = { Text(stringResource(R.string.compose_hint)) },
                     // Temaet bruker monospace i inndatafelt
                     textStyle = TextStyle(fontFamily = FontFamily.Monospace),
+                    keyboardOptions = SentenceCase,
                     shape = RectangleShape, colors = ptFieldColors(),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp).focusRequester(focus),
                 )
@@ -530,6 +537,7 @@ private fun AltTextDialog(
                     value = value, onValueChange = { value = it },
                     placeholder = { Text(stringResource(R.string.alt_hint)) },
                     minLines = 3, maxLines = 8,
+                    keyboardOptions = SentenceCase,
                     shape = RectangleShape, colors = ptFieldColors(),
                     modifier = Modifier.fillMaxWidth(),
                 )

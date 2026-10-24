@@ -56,6 +56,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -172,9 +173,21 @@ private fun tabDirection(from: NavBackStackEntry, to: NavBackStackEntry): Int? {
 fun PleromastiskRoot(auth: AuthViewModel) {
     val state by auth.state.collectAsStateWithLifecycle()
     var viewer by remember { mutableStateOf<Pair<List<MediaAttachment>, Int>?>(null) }
+    // Chatten er ikke knyttet til Pleroma-brukeren, og holdes i live også når man bytter bruker
+    val chat = rememberChatSession()
     CompositionLocalProvider(LocalImageViewer provides { images, index -> viewer = images to index }) {
         Box(Modifier.fillMaxSize()) {
-            if (!state.loggedIn) LoginScreen(auth) else MainScaffold(auth, state)
+            if (!state.loggedIn) {
+                LoginScreen(auth)
+            } else {
+                // Ny bruker: alle skjermer (og ViewModels) lages på nytt
+                key(state.activeKey) { MainScaffold(auth, state, chat) }
+                if (state.addingAccount) {
+                    Box(Modifier.fillMaxSize().background(PT.Bg)) {
+                        LoginScreen(auth, onCancel = auth::cancelAddingAccount)
+                    }
+                }
+            }
             // Bildevisningen ligger øverst, over alt annet (også bunnlinjen)
             viewer?.let { (images, index) -> ImageViewer(images, index) { viewer = null } }
         }
@@ -182,7 +195,7 @@ fun PleromastiskRoot(auth: AuthViewModel) {
 }
 
 @Composable
-private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
+private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSession) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
@@ -190,11 +203,11 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
     val me = state.me
 
     // Valgt liste i «Hjem» (null = vanlig hjemmetidslinje)
-    val listsVm: ListsViewModel = viewModel()
+    val listsVm: ListsViewModel = viewModel(key = "lists_${state.activeKey}")
     val lists by listsVm.lists.collectAsStateWithLifecycle()
     var selectedListId by rememberSaveable { mutableStateOf<String?>(null) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
-    val chat = rememberChatSession()
+    var showSwitcher by rememberSaveable { mutableStateOf(false) }
     val selectedList = lists.firstOrNull { it.id == selectedListId }
 
     fun go(target: String) = nav.navigate(target) {
@@ -218,6 +231,15 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
     )
 
     if (showAbout) AboutDialog(onDismiss = { showAbout = false })
+    if (showSwitcher) {
+        AccountSwitchDialog(
+            accounts = state.accounts,
+            activeKey = state.activeKey,
+            onSelect = { showSwitcher = false; auth.switchTo(it) },
+            onAdd = { showSwitcher = false; auth.startAddingAccount() },
+            onDismiss = { showSwitcher = false },
+        )
+    }
 
     // Dobbelttrykk på tomt område i toppfeltet ruller listen på skjermen til toppen
     val scrollToTop = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
@@ -366,7 +388,11 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                         key = "me_${me.id}",
                         factory = viewModelFactory { initializer { AccountViewModel(me.id) } },
                     )
-                    AccountScreen(me.id, true, vm, actionsFor(vm), onLogout = { auth.logout() })
+                    AccountScreen(
+                        me.id, true, vm, actionsFor(vm),
+                        onLogout = { auth.logout() },
+                        onSwitchAccount = { showSwitcher = true },
+                    )
                 }
             }
             composable(SEARCH) {
@@ -393,7 +419,11 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState) {
                     key = "acc_$id",
                     factory = viewModelFactory { initializer { AccountViewModel(id) } },
                 )
-                AccountScreen(id, id == me?.id, vm, actionsFor(vm), onLogout = { auth.logout() })
+                AccountScreen(
+                    id, id == me?.id, vm, actionsFor(vm),
+                    onLogout = { auth.logout() },
+                    onSwitchAccount = { showSwitcher = true },
+                )
             }
             composable("thread/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
                 val id = e.arguments?.getString("id").orEmpty()

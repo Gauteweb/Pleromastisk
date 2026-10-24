@@ -2,6 +2,7 @@ package app.pleromastisk.ui
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
@@ -96,8 +97,10 @@ private fun openCustomTab(context: Context, url: String) {
 }
 
 @Composable
-fun LoginScreen(auth: AuthViewModel) {
+fun LoginScreen(auth: AuthViewModel, onCancel: (() -> Unit)? = null) {
     val state by auth.state.collectAsStateWithLifecycle()
+    // Ved «Legg til bruker» kan man gå tilbake til brukeren man var logget inn som
+    if (onCancel != null) BackHandler(onBack = onCancel)
     val context = LocalContext.current
     var host by rememberSaveable { mutableStateOf("social.gaute.space") }
     val submit = { auth.login(host) { url -> openCustomTab(context, url) } }
@@ -119,6 +122,12 @@ fun LoginScreen(auth: AuthViewModel) {
                     color = PT.TopBarText, fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(10.dp))
+                if (onCancel != null) {
+                    Text(stringResource(R.string.add_account), color = PT.Text, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(6.dp))
+                    Text(stringResource(R.string.add_account_intro), color = PT.Text)
+                    Spacer(Modifier.height(10.dp))
+                }
                 Text(stringResource(R.string.login_intro), color = PT.Text)
                 Spacer(Modifier.height(18.dp))
                 OutlinedTextField(
@@ -144,6 +153,10 @@ fun LoginScreen(auth: AuthViewModel) {
                         enabled = host.isNotBlank() && !state.busy,
                         filled = true,
                     )
+                    if (onCancel != null) {
+                        Spacer(Modifier.width(10.dp))
+                        PButton(stringResource(R.string.cancel), onCancel)
+                    }
                     if (state.busy) {
                         Spacer(Modifier.width(14.dp))
                         CircularProgressIndicator(Modifier.size(24.dp), color = PT.Link, strokeWidth = 2.dp)
@@ -432,6 +445,7 @@ fun AccountScreen(
     vm: AccountViewModel,
     actions: StatusActions,
     onLogout: () -> Unit,
+    onSwitchAccount: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val account by vm.account.collectAsStateWithLifecycle()
@@ -477,7 +491,10 @@ fun AccountScreen(
                         }
                         Spacer(Modifier.height(12.dp))
                         if (isMe) {
-                            PButton(stringResource(R.string.logout), onLogout)
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                PButton(stringResource(R.string.logout), onLogout)
+                                PButton(stringResource(R.string.switch_account), onSwitchAccount)
+                            }
                         } else {
                             val r = relationship
                             val label = when {

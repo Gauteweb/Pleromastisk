@@ -3,6 +3,7 @@
 <p><b>Features</b></p>
 <ul>
 <li>OAuth login – your password never passes through the app</li>
+<li>Multiple accounts, also on different instances, with "Switch account" on the profile page</li>
 <li>Timelines: Home, Local, Federated and your own lists</li>
 <li>Reply, boost, favourite, bookmark, edit and delete your own posts</li>
 <li>Compose posts with visibility, content warning, up to 4 images with alt text, Markdown and language tagging (nn, nb, en)</li>
@@ -15,6 +16,6 @@
 <li>"About this instance" with the instance's own description and terms of service</li>
 </ul>
 
-<p><b>Not yet supported:</b> full-text search, chat, sending emoji reactions, push notifications, streaming, profile editing, multiple accounts and in-app video playback.</p>
+<p><b>Not yet supported:</b> full-text search, chat, sending emoji reactions, push notifications, streaming, profile editing and in-app video playback.</p>
 
 <p><b>Privacy:</b> No tracking or analytics. The app only talks to the instance you choose, and the access token is stored locally on the device.</p>

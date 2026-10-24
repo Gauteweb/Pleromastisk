@@ -108,6 +108,8 @@ class ApiClient(private val store: SessionStore) {
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("redirect_uri", REDIRECT_URI)
             .appendQueryParameter("scope", SCOPES)
+            // Be om innloggingsskjema selv om nettleseren er innlogget fra før (ved «Legg til bruker»)
+            .appendQueryParameter("force_login", "true")
             .build().toString()
 
     suspend fun exchangeToken(base: String, clientId: String, clientSecret: String, code: String): String {

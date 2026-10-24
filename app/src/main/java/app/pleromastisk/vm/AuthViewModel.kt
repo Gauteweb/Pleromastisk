@@ -7,9 +7,11 @@ import app.pleromastisk.Graph
 import app.pleromastisk.R
 import app.pleromastisk.data.Account
 import app.pleromastisk.data.ApiException
+import app.pleromastisk.data.SavedAccount
 import app.pleromastisk.data.SessionStore
 import app.pleromastisk.userMessage
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +20,11 @@ import kotlinx.coroutines.launch
 
 data class AuthState(
     val loggedIn: Boolean,
+    /** Den aktive brukeren; skjermene lages på nytt når den byttes. */
+    val activeKey: String? = null,
+    val accounts: List<SavedAccount> = emptyList(),
+    /** Innloggingsskjermen vises for å legge til en bruker, selv om man er innlogget. */
+    val addingAccount: Boolean = false,
     val me: Account? = null,
     val busy: Boolean = false,
     val error: String? = null,
@@ -31,31 +38,43 @@ class AuthViewModel : ViewModel() {
     private val store get() = Graph.store
     private val api get() = Graph.api
 
-    private val _state = MutableStateFlow(
-        AuthState(
-            loggedIn = Graph.store.token != null,
-            maxChars = Graph.store.maxChars,
-            postFormats = Graph.store.postFormats,
-            altLimit = Graph.store.altLimit,
-            canEdit = "editing" in Graph.store.features,
-        )
-    )
+    private val _state = MutableStateFlow(stateFromStore())
     val state: StateFlow<AuthState> = _state.asStateFlow()
 
     private val handledCodes = mutableSetOf<String>()
+    private var sessionJob: Job? = null
 
     init {
-        if (store.token != null) {
-            viewModelScope.launch {
-                try {
-                    loadSession()
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: ApiException) {
-                    if (e.code == 401) logout()
-                } catch (_: Exception) {
-                    // Offline ved oppstart: bruk det som er lagret.
-                }
+        if (store.token != null) startSession()
+    }
+
+    /** Tilstand for den aktive brukeren slik den er lagret (før noe er hentet fra instansen). */
+    private fun stateFromStore(): AuthState {
+        val active = store.active
+        return AuthState(
+            loggedIn = active != null,
+            activeKey = active?.key,
+            accounts = store.accounts,
+            maxChars = store.maxChars,
+            postFormats = store.postFormats,
+            altLimit = store.altLimit,
+            canEdit = "editing" in store.features,
+        )
+    }
+
+    /** Henter brukeren og instansinfo for den aktive brukeren i bakgrunnen. */
+    private fun startSession() {
+        val key = store.activeKey ?: return
+        sessionJob?.cancel()
+        sessionJob = viewModelScope.launch {
+            try {
+                loadSession(key)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ApiException) {
+                if (e.code == 401 && store.activeKey == key) logout()
+            } catch (_: Exception) {
+                // Offline ved oppstart: bruk det som er lagret.
             }
         }
     }
@@ -72,10 +91,7 @@ class AuthViewModel : ViewModel() {
                     return@launch
                 }
                 val reg = api.registerApp(base)
-                store.instance = base
-                store.clientId = reg.clientId
-                store.clientSecret = reg.clientSecret
-                store.token = null
+                store.setPendingLogin(base, reg.clientId, reg.clientSecret)
                 openUrl(api.authorizeUrl(base, reg.clientId))
                 _state.update { it.copy(busy = false) }
             } catch (e: CancellationException) {
@@ -95,31 +111,62 @@ class AuthViewModel : ViewModel() {
             return
         }
         if (!handledCodes.add(code)) return
-        val base = store.instance
-        val id = store.clientId
-        val secret = store.clientSecret
-        if (base == null || id == null || secret == null) return
+        val (base, id, secret) = store.pendingLogin() ?: return
+        val previous = store.activeKey
         viewModelScope.launch {
             _state.update { it.copy(busy = true, error = null) }
+            var added: SavedAccount? = null
             try {
-                store.token = api.exchangeToken(base, id, secret, code)
-                loadSession()
-                _state.update { it.copy(loggedIn = true, busy = false) }
+                val token = api.exchangeToken(base, id, secret, code)
+                sessionJob?.cancel()
+                added = store.addAccount(base, id, secret, token)
+                store.clearPendingLogin()
+                loadSession(added.key)
+                // Samme bruker som før på samme instans: behold bare den nye innloggingen
+                store.removeDuplicatesOf(added.key)
+                _state.update {
+                    it.copy(
+                        loggedIn = true, activeKey = added.key, accounts = store.accounts,
+                        addingAccount = false, busy = false,
+                    )
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                store.token = null
-                _state.update { it.copy(busy = false, loggedIn = false, error = e.userMessage()) }
+                added?.let { store.removeAccount(it.key) }
+                store.activeKey = previous
+                _state.update { it.copy(busy = false, accounts = store.accounts, error = e.userMessage()) }
+                if (previous != null) startSession()
             }
         }
     }
 
-    fun logout() {
-        store.clear()
-        _state.value = AuthState(loggedIn = false)
+    /** Viser innloggingsskjermen for å legge til en bruker til. */
+    fun startAddingAccount() {
+        _state.update { it.copy(addingAccount = true, error = null) }
     }
 
-    private suspend fun loadSession() {
+    fun cancelAddingAccount() {
+        store.clearPendingLogin()
+        _state.update { it.copy(addingAccount = false, busy = false, error = null) }
+    }
+
+    fun switchTo(key: String) {
+        if (key == store.activeKey || store.accounts.none { it.key == key }) return
+        store.activeKey = key
+        _state.value = stateFromStore()
+        startSession()
+    }
+
+    /** Logger ut den aktive brukeren. Finnes det flere, byttes det til en av dem. */
+    fun logout() {
+        sessionJob?.cancel()
+        store.activeKey?.let { store.removeAccount(it) }
+        _state.value = stateFromStore()
+        if (store.token != null) startSession()
+    }
+
+    private suspend fun loadSession(key: String) {
         val me = api.verifyCredentials()
         val info = runCatching { api.instanceInfo() }.getOrNull()
         // Tegngrense: konfigurasjon (Mastodon/Pleroma) → max_toot_chars (Pleroma) → 5000.
@@ -128,13 +175,17 @@ class AuthViewModel : ViewModel() {
         val formats = info?.pleroma?.metadata?.postFormats ?: emptyList()
         val features = info?.pleroma?.metadata?.features ?: emptyList()
         val altLimit = info?.descriptionLimit?.takeIf { it > 0 } ?: SessionStore.DEFAULT_ALT_LIMIT
-        store.maxChars = max
-        store.postFormats = formats
-        store.features = features
-        store.altLimit = altLimit
+        store.updateAccount(key) {
+            it.copy(
+                userId = me.id, acct = me.acct, displayName = me.name, avatar = me.avatar,
+                maxChars = max, postFormats = formats, altLimit = altLimit, features = features,
+            )
+        }
+        // Brukeren kan ha byttet til en annen konto mens dette ble hentet
+        if (store.activeKey != key) return
         _state.update {
             it.copy(
-                me = me, maxChars = max, postFormats = formats,
+                me = me, accounts = store.accounts, maxChars = max, postFormats = formats,
                 altLimit = altLimit, canEdit = "editing" in features,
             )
         }

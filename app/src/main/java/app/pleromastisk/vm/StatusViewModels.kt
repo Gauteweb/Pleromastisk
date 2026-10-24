@@ -258,6 +258,9 @@ class ThreadViewModel(private val id: String) : StatusListViewModel() {
 enum class NotificationFilter { ALL, REPLIES }
 
 class NotificationsViewModel : ViewModel() {
+    /** Brukeren varslene gjelder. «Sett» lagres på den, også om man bytter bruker mens siden lukkes. */
+    private val accountKey = Graph.store.activeKey
+
     private val _items = MutableStateFlow<List<Notification>>(emptyList())
     val items: StateFlow<List<Notification>> = _items.asStateFlow()
     private val _paging = MutableStateFlow(Paging())
@@ -276,14 +279,18 @@ class NotificationsViewModel : ViewModel() {
     /** Kalles når brukeren går vekk fra varselsiden: alt som vises nå regnes som sett. */
     fun markSeen() {
         if (_filter.value == NotificationFilter.ALL) {
-            _items.value.firstOrNull()?.let { Graph.store.lastSeenNotification = it.id }
+            val top = _items.value.firstOrNull()
+            if (top != null && accountKey != null) {
+                Graph.store.updateAccount(accountKey) { it.copy(lastSeenNotification = top.id) }
+            }
         }
         _newCount.value = 0
     }
 
     private fun countNew(list: List<Notification>): Int {
         if (_filter.value != NotificationFilter.ALL) return 0
-        val seen = Graph.store.lastSeenNotification ?: return 0 // aldri vært her før
+        val seen = Graph.store.accounts.firstOrNull { it.key == accountKey }?.lastSeenNotification
+            ?: return 0 // aldri vært her før
         val idx = list.indexOfFirst { it.id == seen }
         return if (idx >= 0) idx else list.size // ikke funnet: alle på første side er nye
     }
