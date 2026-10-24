@@ -1,0 +1,2 @@
+- Multiple accounts: "Switch account" on the profile page lists your accounts and lets you add more, also on other instances
+- New lines and sentences in "New post" start with a capital letter

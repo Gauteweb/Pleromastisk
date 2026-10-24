@@ -1,0 +1,2 @@
+- Flere brukere: «Bytt bruker» på profilsiden viser brukerne dine og lar deg legge til flere, også på andre instanser
+- Nye linjer og setninger i «Nytt innlegg» starter med stor bokstav
