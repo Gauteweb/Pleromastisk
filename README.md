@@ -1,6 +1,6 @@
 # Pleromastisk
 
-En Android-app for [Pleroma](https://pleroma.social)-instanser, med norsk grensesnitt og et
+En Android-app for [Pleroma](https://pleroma.social)-instanser, med norsk og engelsk grensesnitt og et
 utseende hentet fra Pleroma-temaet
 [gaute.space](https://gaute.space/forgejo/gaute/pleromathemes/src/branch/main/gautespace.json):
 skarpe hjørner, tynn tan kantlinje, mørke blågrønne flater og et eget bakgrunnsbilde.

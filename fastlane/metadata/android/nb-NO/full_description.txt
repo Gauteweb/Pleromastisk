@@ -1,4 +1,4 @@
-<p>Pleromastisk er en Android-app for <a href="https://pleroma.social">Pleroma</a>-instanser, med norsk grensesnitt og et eget mørkt, blågrønt tema. Appen er laget for social.gaute.space, men fungerer mot andre Pleroma-instanser og i prinsippet andre tjenere med Mastodon-kompatibelt API.</p>
+<p>Pleromastisk er en Android-app for <a href="https://pleroma.social">Pleroma</a>-instanser, med norsk og engelsk grensesnitt og et eget mørkt, blågrønt tema. Appen er laget for social.gaute.space, men fungerer mot andre Pleroma-instanser og i prinsippet andre tjenere med Mastodon-kompatibelt API.</p>
 
 <p><b>Funksjoner</b></p>
 <ul>

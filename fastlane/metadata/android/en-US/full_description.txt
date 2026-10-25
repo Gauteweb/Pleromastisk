@@ -1,4 +1,4 @@
-<p>Pleromastisk is an Android client for <a href="https://pleroma.social">Pleroma</a> instances, with a dark teal theme of its own. <b>The user interface is in Norwegian only.</b> It is made for social.gaute.space, but works with other Pleroma instances and, in principle, other servers with a Mastodon-compatible API.</p>
+<p>Pleromastisk is an Android client for <a href="https://pleroma.social">Pleroma</a> instances, with a dark teal theme of its own. The app is shown in Norwegian when the phone is set to Norwegian (Bokmål or Nynorsk), and in English otherwise. It is made for social.gaute.space, but works with other Pleroma instances and, in principle, other servers with a Mastodon-compatible API.</p>
 
 <p><b>Features</b></p>
 <ul>

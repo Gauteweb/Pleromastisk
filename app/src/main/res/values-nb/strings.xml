@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Norsk (bokmål). Brukes også for nynorsk og «no»: app/build.gradle.kts kopierer filen dit ved bygging. -->
+<resources>
+    <string name="app_name">Pleromastisk</string>
+
+    <!-- Navigasjon -->
+    <string name="nav_home">Hjem</string>
+    <string name="nav_local">Lokalt</string>
+    <string name="nav_search">Søk</string>
+    <string name="nav_federated">Føderert</string>
+    <string name="nav_compose">Skriv</string>
+    <string name="nav_notifications">Varsler</string>
+    <string name="nav_profile">Profil</string>
+    <string name="title_home">Hjem</string>
+    <string name="title_local">Lokal tidslinje</string>
+    <string name="title_federated">Fødererte innlegg</string>
+    <string name="title_notifications">Varsler</string>
+    <string name="title_search">Søk</string>
+    <string name="title_profile">Min profil</string>
+    <string name="title_account">Profil</string>
+    <string name="title_thread">Tråd</string>
+    <string name="back">Tilbake</string>
+
+    <!-- Innlogging -->
+    <string name="login_intro">Logg inn på en Pleroma-instans. Du sendes til instansens egen innloggingsside for å godkjenne appen – passordet ditt går aldri via Pleromastisk.</string>
+    <string name="instance_label">Instans</string>
+    <string name="login_button">Logg inn</string>
+    <string name="login_denied">Innloggingen ble avbrutt eller avvist.</string>
+    <string name="login_invalid_instance">Skriv inn adressen til en instans, for eksempel social.gaute.space</string>
+    <string name="logout">Logg ut</string>
+    <string name="switch_account">Bytt bruker</string>
+    <string name="avatar_description">Profilbildet til %1$s</string>
+    <string name="switch_account_active">Aktiv bruker</string>
+    <string name="add_account">Legg til bruker</string>
+    <string name="add_account_intro">Logg inn med en bruker til. Du kan bytte mellom brukerne med «Bytt bruker» på profilsiden.</string>
+
+    <!-- Om appen -->
+    <string name="about_button">Om appen</string>
+    <string name="chat_button">Chat</string>
+    <string name="title_chat">Chat</string>
+    <string name="about_title">Om Pleromastisk</string>
+    <string name="about_p1">Denne appen er utviklet med Claude av Gaute Holmin for bruk med Pleroma Social.</string>
+    <string name="about_p2">Det er ikke et mål å ha all funksjonalitet i appen som i Pleroma Social, men nok til å gi et brukervennlig og enkelt grensesnitt for de mest vanlige behovene.</string>
+    <string name="about_p3">Du kan laste ned kildekoden og videreutvikle appen selv fra</string>
+    <string name="about_p4">Appen finnes per nå kun for Android, det er ingen planer for en iOS versjon.</string>
+    <string name="about_close">Lukk</string>
+    <string name="instance_about_button">Om</string>
+    <plurals name="new_notifications">
+        <item quantity="one">%d nytt varsel</item>
+        <item quantity="other">%d nye varsler</item>
+    </plurals>
+    <string name="instance_about_title">Om instansen</string>
+    <string name="instance_about_empty">Instansen har ingen «Om»-side.</string>
+
+    <!-- Alt-tekst og redigering -->
+    <string name="alt_title">Alt-tekst</string>
+    <string name="alt_none">Ingen alt-tekst er lagt inn for dette bildet.</string>
+    <string name="viewer_close">Lukk</string>
+    <string name="viewer_open_original">Åpne original</string>
+    <string name="alt_hint">Beskriv bildet for de som ikke kan se det</string>
+    <string name="alt_save">Lagre</string>
+    <string name="alt_badge">ALT</string>
+    <string name="alt_add_badge">+ ALT</string>
+    <string name="alt_update_failed">Kunne ikke lagre alt-teksten</string>
+    <string name="action_edit">Rediger</string>
+    <string name="compose_edit_title">Rediger innlegg</string>
+    <string name="compose_update">Oppdater</string>
+    <string name="compose_updated">Innlegget er oppdatert</string>
+    <string name="edited">redigert</string>
+    <string name="via_app">via %1$s</string>
+
+    <!-- Søk -->
+    <string name="search_hint">Søk etter @brukere og #emneknagger</string>
+    <string name="search_start">Skriv @navn for å finne brukere eller #emne for å finne emneknagger. Vanlig tekst søker etter begge deler.</string>
+    <string name="search_users">Brukere</string>
+    <string name="search_tags">Emneknagger</string>
+    <string name="search_empty">Ingen treff.</string>
+    <string name="search_clear">Tøm søket</string>
+
+    <!-- Lokal feed og profilfelt -->
+    <string name="menu_local_feed">Lokal feed</string>
+    <string name="profile_verified">Bekreftet lenke</string>
+
+    <!-- Språk på innlegg -->
+    <string name="language_label">Språk</string>
+    <string name="lang_nn">Nynorsk</string>
+    <string name="lang_nb">Bokmål</string>
+    <string name="lang_en">Engelsk</string>
+
+    <!-- Lister -->
+    <string name="lists_header">Mine lister</string>
+    <string name="lists_none">Ingen lister funnet</string>
+    <string name="lists_choose">Velg liste</string>
+    <string name="lists_button">Lister</string>
+    <string name="lists_add_title">Legg til i liste</string>
+    <string name="lists_new">Ny liste</string>
+    <string name="lists_new_hint">Navn på listen</string>
+    <string name="lists_create">Lag</string>
+
+    <!-- Emojivelger -->
+    <string name="compose_emoji">Emojier</string>
+    <string name="emoji_search">Søk etter emoji</string>
+    <string name="emoji_none">Ingen emojier funnet</string>
+
+    <!-- Tidslinjer -->
+    <string name="empty_timeline">Ingen innlegg å vise ennå.</string>
+    <string name="retry">Prøv igjen</string>
+    <string name="boosted_by">%1$s delte</string>
+    <string name="show_more">Vis</string>
+    <string name="show_less">Skjul</string>
+    <string name="sensitive_media">Sensitivt innhold – trykk for å vise</string>
+    <string name="audio_attachment">Lyd</string>
+    <string name="video_attachment">Video</string>
+    <string name="attachment_open">Åpne vedlegg</string>
+
+    <!-- Handlinger -->
+    <string name="action_reply">Svar</string>
+    <string name="action_boost">Del</string>
+    <string name="action_favourite">Favoritt</string>
+    <string name="action_bookmark">Bokmerke</string>
+    <string name="action_more">Flere valg</string>
+    <string name="action_open_browser">Åpne i nettleser</string>
+    <string name="action_copy_link">Kopier lenke</string>
+    <string name="action_delete">Slett</string>
+    <string name="link_copied">Lenken er kopiert</string>
+    <string name="delete_confirm_title">Slette innlegget?</string>
+    <string name="delete_confirm_text">Dette kan ikke angres.</string>
+    <string name="cancel">Avbryt</string>
+
+    <!-- Avstemning -->
+    <string name="poll_vote">Stem</string>
+    <string name="poll_votes">%1$d stemmer</string>
+    <string name="poll_closed">Avsluttet</string>
+
+    <!-- Tid -->
+    <string name="time_now">nå</string>
+    <string name="time_min">%1$d min</string>
+    <string name="time_hour">%1$d t</string>
+    <string name="time_day">%1$d d</string>
+
+    <!-- Synlighet -->
+    <string name="vis_public">Offentlig</string>
+    <string name="vis_unlisted">Ulistet</string>
+    <string name="vis_private">Kun følgere</string>
+    <string name="vis_direct">Direkte</string>
+    <string name="visibility">Synlighet</string>
+
+    <!-- Skriv innlegg -->
+    <string name="compose_title">Nytt innlegg</string>
+    <string name="compose_reply_title">Svar på innlegg</string>
+    <string name="compose_hint">Hva tenker du på?</string>
+    <string name="compose_cw_label">Innholdsvarsel</string>
+    <string name="compose_publish">Publiser</string>
+    <string name="compose_published">Innlegget er publisert</string>
+    <string name="compose_attach">Legg ved bilde</string>
+    <string name="compose_cw_toggle">Innholdsvarsel</string>
+    <string name="compose_markdown">Markdown</string>
+    <string name="compose_remove_attachment">Fjern vedlegg</string>
+    <string name="compose_upload_failed">Kunne ikke laste opp vedlegget</string>
+    <string name="char_counter">%1$d / %2$d</string>
+
+    <!-- Varsler -->
+    <string name="notif_mention">%1$s nevnte deg</string>
+    <string name="notif_reblog">%1$s delte innlegget ditt</string>
+    <string name="notif_favourite">%1$s favorittmarkerte innlegget ditt</string>
+    <string name="notif_follow">%1$s følger deg nå</string>
+    <string name="notif_follow_request">%1$s ber om å få følge deg</string>
+    <string name="notif_poll">En avstemning du deltok i, er avsluttet</string>
+    <string name="notif_status">%1$s la ut et nytt innlegg</string>
+    <string name="notif_update">%1$s redigerte et innlegg</string>
+    <string name="notif_reaction">%1$s reagerte med %2$s</string>
+    <string name="notif_other">%1$s (%2$s)</string>
+    <string name="empty_notifications">Ingen varsler.</string>
+    <string name="empty_replies">Ingen svar å vise.</string>
+    <string name="notif_filter_all">Alle</string>
+    <string name="notif_filter_replies">Svar</string>
+
+    <!-- Profil -->
+    <string name="profile_posts">Innlegg</string>
+    <string name="profile_following">Følger</string>
+    <string name="profile_followers">Følgere</string>
+    <string name="profile_follow">Følg</string>
+    <string name="profile_unfollow">Slutt å følge</string>
+    <string name="profile_requested">Forespørsel sendt</string>
+
+    <!-- Feil -->
+    <string name="error_network">Fikk ikke kontakt med instansen. Sjekk nettverket og prøv igjen.</string>
+    <string name="error_session_expired">Innloggingen er utløpt. Logg inn på nytt.</string>
+    <string name="error_generic">Noe gikk galt: %1$s</string>
+</resources>

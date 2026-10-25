@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.util.Locale
 import java.util.UUID
 
 /** En innlogget bruker: instans, OAuth-klient, token og det appen husker om instansen. */
@@ -171,9 +172,9 @@ class SessionStore(context: Context) {
     @Synchronized
     fun wasPostedHere(id: String): Boolean = id in postedHere
 
-    /** Sist valgte språk for nye innlegg (nb, nn eller en). */
+    /** Sist valgte språk for nye innlegg (nb, nn eller en). Første gang: telefonens språk. */
     var language: String
-        get() = sp.getString("language", "nb") ?: "nb"
+        get() = sp.getString("language", null) ?: defaultLanguage()
         set(v) = sp.edit().putString("language", v).apply()
 
     /** Bunnmenyen uten tekst under ikonene (slås av/på ved å holde inne en menyknapp). */
@@ -210,6 +211,12 @@ class SessionStore(context: Context) {
             .remove("max_chars").remove("post_formats").remove("alt_limit").remove("features")
             .remove("last_seen_notification")
             .apply()
+    }
+
+    private fun defaultLanguage(): String = when (Locale.getDefault().language) {
+        "nn" -> "nn"
+        "nb", "no" -> "nb"
+        else -> "en"
     }
 
     companion object {

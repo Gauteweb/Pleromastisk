@@ -37,6 +37,39 @@ android {
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
 
+/**
+ * Norsk tekst finnes bare i values-nb. Nynorsk (nn) og eldre enheter som oppgir «no» faller ikke
+ * tilbake til nb av seg selv, men til standardspråket (engelsk). Derfor kopieres den norske filen
+ * til values-nn og values-no ved hver bygging.
+ */
+abstract class NorwegianStrings : DefaultTask() {
+    @get:InputFile
+    abstract val bokmal: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        for (folder in listOf("values-nn", "values-no")) {
+            val target = outputDir.file("$folder/strings.xml").get().asFile
+            target.parentFile.mkdirs()
+            bokmal.get().asFile.copyTo(target, overwrite = true)
+        }
+    }
+}
+
+val norwegianStrings = tasks.register<NorwegianStrings>("norwegianStrings") {
+    bokmal.set(layout.projectDirectory.file("src/main/res/values-nb/strings.xml"))
+    outputDir.set(layout.buildDirectory.dir("generated/res/norwegian"))
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.res?.addGeneratedSourceDirectory(norwegianStrings, NorwegianStrings::outputDir)
+    }
+}
+
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
     implementation(composeBom)
