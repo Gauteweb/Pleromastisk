@@ -1,0 +1,1 @@
+- Each account has its own colour theme, which changes when you switch account

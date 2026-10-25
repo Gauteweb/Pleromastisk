@@ -1,0 +1,1 @@
+- Hver bruker har sitt eget fargetema, som byttes når du bytter bruker
