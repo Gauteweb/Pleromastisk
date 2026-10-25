@@ -1,0 +1,1 @@
+- Five colour themes: Standard, Blue, Purple, Dark and Light. Choose with the palette button on the profile page
