@@ -296,8 +296,9 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
                     } else null,
                     actions = {
                         if (route == NOTIFICATIONS) entry?.let { NewNotificationsBadge(viewModel(it)) }
-                        if (route == HOME && selectedListId == LOCAL_FEED) {
-                            // «Om»-siden til instansen brukeren er logget inn på
+                        if (route == HOME && selectedListId == LOCAL_FEED && state.isPleroma) {
+                            // «Om»-siden til instansen brukeren er logget inn på. Bare Pleroma har
+                            // panel.html og terms-of-service.html; ellers vises chat-ikonet som vanlig
                             TextButton(onClick = { nav.navigate(INSTANCE_ABOUT) }) {
                                 Text(stringResource(R.string.instance_about_button), color = PT.TopBarText)
                             }
@@ -588,7 +589,7 @@ private fun RowScope.NavItem(
     onLongClick: () -> Unit,
     onClick: () -> Unit,
 ) {
-    val tint = if (selected) PT.TopBarText else PT.Link
+    val tint = if (selected) PT.NavActive else PT.Link
     Column(
         Modifier
             .weight(1f)
@@ -696,7 +697,7 @@ private fun ListMenuTitle(
     }
 }
 
-private const val REPO_URL = "https://gaute.space/forgejo/gaute/Pleromastisk"
+private const val REPO_URL = "https://github.com/Gauteweb/Pleromastisk"
 
 /** Infoboks som åpnes fra info-ikonet øverst til høyre på «Hjem». */
 @Composable
@@ -727,7 +728,13 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                     },
                     color = PT.Text,
                 )
-                Text(stringResource(R.string.about_p4), color = PT.Text)
+                // Versjonen hentes fra appen selv (versionName i app/build.gradle.kts)
+                val context = LocalContext.current
+                val version = remember {
+                    runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
+                        .getOrNull().orEmpty()
+                }
+                Text(stringResource(R.string.about_version, version), color = PT.Text)
             }
         },
         confirmButton = {

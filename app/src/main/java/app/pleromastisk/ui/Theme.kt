@@ -65,6 +65,8 @@ data class PtColors(
     val overlay: Color,
     /** Lyst tema: mørke ikoner i statuslinjen og Materials lyse fargeskjema. */
     val light: Boolean = false,
+    /** Aktivt menypunkt i bunnmenyen. Lysere enn overskriftsfargen der den ligner for mye på de andre. */
+    val navActive: Color = topBarText,
 )
 
 /** Temaene brukeren kan velge mellom på profilsiden. [id] lagres, så den må ikke endres. */
@@ -88,6 +90,7 @@ enum class AppTheme(val id: String, @StringRes val label: Int, val colors: PtCol
             topBar = Color(0xFF121C2B), topBarText = Color(0xFF7FC4F0), border = Color(0xFF8FB8DE),
             red = Color(0xFFB05C66), blue = Color(0xFF81A6C4), green = Color(0xFF4FA3A8), orange = Color(0xFFD6924C),
             pressedBg = Color(0xFF2A3A52), pressedBorder = Color(0xFF5C7A9E), overlay = Color(0x55101A2C),
+            navActive = Color(0xFFD6EEFF),
         ),
     ),
     PURPLE(
@@ -98,6 +101,7 @@ enum class AppTheme(val id: String, @StringRes val label: Int, val colors: PtCol
             topBar = Color(0xFF1C1626), topBarText = Color(0xFFD3A6F2), border = Color(0xFFB9A0E0),
             red = Color(0xFFB05C70), blue = Color(0xFF8FA6D6), green = Color(0xFF5FA39A), orange = Color(0xFFD6924C),
             pressedBg = Color(0xFF3A2E50), pressedBorder = Color(0xFF7E68A3), overlay = Color(0x5520122C),
+            navActive = Color(0xFFF2E2FF),
         ),
     ),
     DARK(
@@ -108,6 +112,7 @@ enum class AppTheme(val id: String, @StringRes val label: Int, val colors: PtCol
             topBar = Color(0xFF101010), topBarText = Color(0xFFD9C9A8), border = Color(0xFFAB9977),
             red = Color(0xFF9E555B), blue = Color(0xFF81A6C4), green = Color(0xFF319195), orange = Color(0xFFD6924C),
             pressedBg = Color(0xFF3A352B), pressedBorder = Color(0xFF7D7057), overlay = Color(0x88000000),
+            navActive = Color(0xFFFFF6E3),
         ),
     ),
     LIGHT(
@@ -152,6 +157,7 @@ object PT {
     val PressedBg: Color get() = c.pressedBg
     val PressedBorder: Color get() = c.pressedBorder
     val Overlay: Color get() = c.overlay
+    val NavActive: Color get() = c.navActive
 
     const val PanelAlpha = 0.8f
     val Muted: Color get() = FgText.copy(alpha = 0.65f)

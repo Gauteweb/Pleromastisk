@@ -218,17 +218,26 @@ data class TokenResponse(@SerialName("access_token") val accessToken: String)
 @Serializable
 data class InstanceInfo(
     val title: String = "",
+    /** Pleroma oppgir f.eks. «2.7.2 (compatible; Pleroma 2.6.3)». */
+    val version: String = "",
     @SerialName("max_toot_chars") val maxTootChars: Int? = null,
     @SerialName("description_limit") val descriptionLimit: Int? = null,
     val configuration: InstanceConfig? = null,
     val pleroma: PleromaInfo? = null,
-)
+) {
+    /** Pleroma (eller en forgrening som Akkoma), ikke Mastodon e.l. */
+    val isPleroma: Boolean get() = pleroma != null || "pleroma" in version.lowercase()
+}
 
 @Serializable
 data class InstanceConfig(val statuses: StatusesConfig? = null)
 
 @Serializable
-data class StatusesConfig(@SerialName("max_characters") val maxCharacters: Int? = null)
+data class StatusesConfig(
+    @SerialName("max_characters") val maxCharacters: Int? = null,
+    /** Tekstformater for innlegg (GoToSocial, glitch-soc), f.eks. text/plain og text/markdown. */
+    @SerialName("supported_mime_types") val supportedMimeTypes: List<String> = emptyList(),
+)
 
 @Serializable
 data class PleromaInfo(val metadata: PleromaMetadata? = null)

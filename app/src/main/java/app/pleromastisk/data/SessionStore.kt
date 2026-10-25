@@ -26,6 +26,8 @@ data class SavedAccount(
     val altLimit: Int = SessionStore.DEFAULT_ALT_LIMIT,
     val features: List<String> = emptyList(),
     val lastSeenNotification: String? = null,
+    /** Om instansen er Pleroma; null til det er sjekket. */
+    val isPleroma: Boolean? = null,
 ) {
     /** «navn@instans», også for lokale brukere der instansen ikke står i acct. */
     val handle: String

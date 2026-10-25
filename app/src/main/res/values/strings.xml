@@ -39,9 +39,9 @@
     <string name="chat_button">Chat</string>
     <string name="title_chat">Chat</string>
     <string name="about_title">About Pleromastisk</string>
-    <string name="about_p1">This app was developed with Claude Code by Gaute Holmin for Pleroma Social, but it also works with Mastodon.</string>
+    <string name="about_p1">This app was developed with Claude Code by Gaute Holmin for Pleroma Social, but it also works with Mastodon and GoToSocial.</string>
     <string name="about_p3">You can download the source code and develop the app further yourself from</string>
-    <string name="about_p4">The app is currently only available for Android, and there are no plans for an iOS version.</string>
+    <string name="about_version">Version: %1$s</string>
     <string name="about_close">Close</string>
     <string name="theme_button">Choose theme</string>
     <string name="theme_title">Theme</string>
