@@ -29,6 +29,7 @@
     <string name="login_invalid_instance">Skriv inn adressen til en instans, for eksempel social.gaute.space</string>
     <string name="logout">Logg ut</string>
     <string name="switch_account">Bytt bruker</string>
+    <string name="avatar_description">Profilbildet til %1$s</string>
     <string name="switch_account_active">Aktiv bruker</string>
     <string name="add_account">Legg til bruker</string>
     <string name="add_account_intro">Logg inn med en bruker til. Du kan bytte mellom brukerne med «Bytt bruker» på profilsiden.</string>

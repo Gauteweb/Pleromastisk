@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -45,9 +46,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -438,6 +441,42 @@ fun NotificationsScreen(
 
 // ---------------------------------------------------------------- Profil
 
+/** Profilbildet i stort format, i samme stil som «Bytt bruker». */
+@Composable
+private fun AvatarDialog(account: Account, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.border(1.dp, PT.Border),
+        containerColor = PT.Fg,
+        title = {
+            EmojiText(
+                account.name, account.emojis,
+                color = PT.TopBarText, fontWeight = FontWeight.Bold, maxLines = 2,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AsyncImage(
+                    model = account.avatar,
+                    contentDescription = stringResource(R.string.avatar_description, account.name),
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .background(PT.Bg)
+                        .border(1.dp, PT.Border),
+                )
+                Text("@" + account.acct, color = PT.Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.about_close), color = PT.Link)
+            }
+        },
+    )
+}
+
 @Composable
 fun AccountScreen(
     accountId: String,
@@ -463,8 +502,11 @@ fun AccountScreen(
                         )
                     }
                     Column(Modifier.padding(12.dp)) {
+                        var showAvatar by rememberSaveable { mutableStateOf(false) }
+                        if (showAvatar) AvatarDialog(a, onDismiss = { showAvatar = false })
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Avatar(a.avatar, 64)
+                            // Trykk på profilbildet for å se det i stort format
+                            Avatar(a.avatar, 64, Modifier.clickable { showAvatar = true })
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 EmojiText(
