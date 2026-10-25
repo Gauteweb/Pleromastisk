@@ -1,5 +1,6 @@
 package app.pleromastisk.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,10 +26,14 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,54 +42,138 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import app.pleromastisk.R
 
-/**
- * Farger og former fra Pleroma-temaet «gaute.space»:
- * skarpe hjørner (alle radier = 0), 1 dp tan kantlinje (#AB9977) i stedet for skygger,
- * mørke blågrønne flater og bakgrunn med 80 % dekkevne over bakgrunnsbildet.
- */
-object PT {
-    val Bg = Color(0xFF203237)
-    val Text = Color(0xFFC2D9D4)
-    val Link = Color(0xFFAB9977)
-    val Fg = Color(0xFF132B29)
-    val FgText = Color(0xFFB5D4CE)
-    val TopBar = Color(0xFF132B29)
-    val TopBarText = Color(0xFF65C89C)
-    val Border = Color(0xFFAB9977)
-    val Red = Color(0xFF9E555B)
-    val Blue = Color(0xFF81A6C4)
-    val Green = Color(0xFF319195)
-    val Orange = Color(0xFFD6924C)
-    val PressedBg = Color(0xFF443D30)
-    val PressedBorder = Color(0xFF7D7057)
+/** Fargene i ett tema. Alle temaene har samme stil: skarpe hjørner og tynn kantlinje i stedet for skygger. */
+@Immutable
+data class PtColors(
+    val bg: Color,
+    val text: Color,
+    val link: Color,
+    val fg: Color,
+    val fgText: Color,
+    val topBar: Color,
+    val topBarText: Color,
+    val border: Color,
+    val red: Color,
+    val blue: Color,
+    val green: Color,
+    val orange: Color,
+    val pressedBg: Color,
+    val pressedBorder: Color,
+    /** Slør over bakgrunnsbildet, så teksten alltid er lesbar. */
+    val overlay: Color,
+    /** Lyst tema: mørke ikoner i statuslinjen og Materials lyse fargeskjema. */
+    val light: Boolean = false,
+)
 
-    const val PanelAlpha = 0.8f
-    val Muted = FgText.copy(alpha = 0.65f)
+/** Temaene brukeren kan velge mellom på profilsiden. [id] lagres, så den må ikke endres. */
+enum class AppTheme(val id: String, @StringRes val label: Int, val colors: PtColors) {
+    /** Pleroma-temaet «gaute.space»: mørke blågrønne flater og tan kantlinje (#AB9977). */
+    STANDARD(
+        "standard", R.string.theme_standard,
+        PtColors(
+            bg = Color(0xFF203237), text = Color(0xFFC2D9D4), link = Color(0xFFAB9977),
+            fg = Color(0xFF132B29), fgText = Color(0xFFB5D4CE),
+            topBar = Color(0xFF132B29), topBarText = Color(0xFF65C89C), border = Color(0xFFAB9977),
+            red = Color(0xFF9E555B), blue = Color(0xFF81A6C4), green = Color(0xFF319195), orange = Color(0xFFD6924C),
+            pressedBg = Color(0xFF443D30), pressedBorder = Color(0xFF7D7057), overlay = Color(0x33102022),
+        ),
+    ),
+    BLUE(
+        "blue", R.string.theme_blue,
+        PtColors(
+            bg = Color(0xFF1E2B3D), text = Color(0xFFC9D6E8), link = Color(0xFF8FB8DE),
+            fg = Color(0xFF121C2B), fgText = Color(0xFFBCCDE3),
+            topBar = Color(0xFF121C2B), topBarText = Color(0xFF7FC4F0), border = Color(0xFF8FB8DE),
+            red = Color(0xFFB05C66), blue = Color(0xFF81A6C4), green = Color(0xFF4FA3A8), orange = Color(0xFFD6924C),
+            pressedBg = Color(0xFF2A3A52), pressedBorder = Color(0xFF5C7A9E), overlay = Color(0x55101A2C),
+        ),
+    ),
+    PURPLE(
+        "purple", R.string.theme_purple,
+        PtColors(
+            bg = Color(0xFF2A2238), text = Color(0xFFDCD0EA), link = Color(0xFFB9A0E0),
+            fg = Color(0xFF1C1626), fgText = Color(0xFFCFC2E0),
+            topBar = Color(0xFF1C1626), topBarText = Color(0xFFD3A6F2), border = Color(0xFFB9A0E0),
+            red = Color(0xFFB05C70), blue = Color(0xFF8FA6D6), green = Color(0xFF5FA39A), orange = Color(0xFFD6924C),
+            pressedBg = Color(0xFF3A2E50), pressedBorder = Color(0xFF7E68A3), overlay = Color(0x5520122C),
+        ),
+    ),
+    DARK(
+        "dark", R.string.theme_dark,
+        PtColors(
+            bg = Color(0xFF1A1A1A), text = Color(0xFFD6D6D6), link = Color(0xFFAB9977),
+            fg = Color(0xFF101010), fgText = Color(0xFFC8C8C8),
+            topBar = Color(0xFF101010), topBarText = Color(0xFFD9C9A8), border = Color(0xFFAB9977),
+            red = Color(0xFF9E555B), blue = Color(0xFF81A6C4), green = Color(0xFF319195), orange = Color(0xFFD6924C),
+            pressedBg = Color(0xFF3A352B), pressedBorder = Color(0xFF7D7057), overlay = Color(0x88000000),
+        ),
+    ),
+    LIGHT(
+        "light", R.string.theme_light,
+        PtColors(
+            bg = Color(0xFFE8EEEC), text = Color(0xFF1F2E2C), link = Color(0xFF7D6232),
+            fg = Color(0xFFF8FAF9), fgText = Color(0xFF2A3B38),
+            topBar = Color(0xFFF8FAF9), topBarText = Color(0xFF1F7A5A), border = Color(0xFFA08A62),
+            red = Color(0xFFB0444C), blue = Color(0xFF3F6E96), green = Color(0xFF23787C), orange = Color(0xFFB86E25),
+            pressedBg = Color(0xFFE6DCC6), pressedBorder = Color(0xFF7D6232), overlay = Color(0xAAE8EEEC),
+            light = true,
+        ),
+    ),
+    ;
+
+    companion object {
+        fun fromId(id: String?): AppTheme = entries.firstOrNull { it.id == id } ?: STANDARD
+    }
 }
 
-private val Scheme = darkColorScheme(
-    primary = PT.Link,
-    onPrimary = PT.Fg,
-    secondary = PT.TopBarText,
-    onSecondary = PT.Fg,
-    tertiary = PT.Blue,
-    background = PT.Bg,
-    onBackground = PT.Text,
-    surface = PT.Fg,
-    onSurface = PT.FgText,
-    surfaceVariant = PT.Fg,
-    onSurfaceVariant = PT.FgText,
-    surfaceContainer = PT.Fg,
-    surfaceContainerHigh = PT.Fg,
-    surfaceContainerHighest = PT.Fg,
-    surfaceContainerLow = PT.Fg,
-    surfaceContainerLowest = PT.Fg,
-    outline = PT.Border,
-    outlineVariant = PT.Border,
-    error = PT.Red,
-    onError = PT.Text,
-)
+/**
+ * Fargene i det valgte temaet. [theme] er Compose-tilstand, så alt som leser fargene tegnes på nytt
+ * med en gang brukeren bytter tema.
+ */
+object PT {
+    var theme by mutableStateOf(AppTheme.STANDARD)
+
+    private val c: PtColors get() = theme.colors
+
+    val Bg: Color get() = c.bg
+    val Text: Color get() = c.text
+    val Link: Color get() = c.link
+    val Fg: Color get() = c.fg
+    val FgText: Color get() = c.fgText
+    val TopBar: Color get() = c.topBar
+    val TopBarText: Color get() = c.topBarText
+    val Border: Color get() = c.border
+    val Red: Color get() = c.red
+    val Blue: Color get() = c.blue
+    val Green: Color get() = c.green
+    val Orange: Color get() = c.orange
+    val PressedBg: Color get() = c.pressedBg
+    val PressedBorder: Color get() = c.pressedBorder
+    val Overlay: Color get() = c.overlay
+
+    const val PanelAlpha = 0.8f
+    val Muted: Color get() = FgText.copy(alpha = 0.65f)
+}
+
+private fun schemeFor(c: PtColors) = if (c.light) {
+    lightColorScheme(
+        primary = c.link, onPrimary = c.fg, secondary = c.topBarText, onSecondary = c.fg, tertiary = c.blue,
+        background = c.bg, onBackground = c.text, surface = c.fg, onSurface = c.fgText,
+        surfaceVariant = c.fg, onSurfaceVariant = c.fgText, surfaceContainer = c.fg, surfaceContainerHigh = c.fg,
+        surfaceContainerHighest = c.fg, surfaceContainerLow = c.fg, surfaceContainerLowest = c.fg,
+        outline = c.border, outlineVariant = c.border, error = c.red, onError = c.fg,
+    )
+} else {
+    darkColorScheme(
+        primary = c.link, onPrimary = c.fg, secondary = c.topBarText, onSecondary = c.fg, tertiary = c.blue,
+        background = c.bg, onBackground = c.text, surface = c.fg, onSurface = c.fgText,
+        surfaceVariant = c.fg, onSurfaceVariant = c.fgText, surfaceContainer = c.fg, surfaceContainerHigh = c.fg,
+        surfaceContainerHighest = c.fg, surfaceContainerLow = c.fg, surfaceContainerLowest = c.fg,
+        outline = c.border, outlineVariant = c.border, error = c.red, onError = c.text,
+    )
+}
 
 private val SharpShapes = Shapes(
     extraSmall = RoundedCornerShape(0.dp),
@@ -96,7 +185,9 @@ private val SharpShapes = Shapes(
 
 @Composable
 fun PleromastiskTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = Scheme, shapes = SharpShapes) {
+    val theme = PT.theme
+    val scheme = remember(theme) { schemeFor(theme.colors) }
+    MaterialTheme(colorScheme = scheme, shapes = SharpShapes) {
         CompositionLocalProvider(LocalContentColor provides PT.FgText, content = content)
     }
 }

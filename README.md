@@ -43,6 +43,7 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 - Chat-ikonet på «Hjem» åpner [chat.gaute.space](https://chat.gaute.space) i appen – Matrix-klienten
   [Cinny](https://cinny.in) med appens farger. Forbindelsen holdes i live når du bytter faner.
 - «Om»-knappen i lokal feed viser instansens «Om»-side og tjenestevilkår.
+- Fem fargetemaer i samme stil – Standard, Blå, Lilla, Mørk og Lys – velges med palett-knappen på «Profil».
 - ⓘ på «Profil» viser informasjon om appen og lenke til kildekoden.
 
 ### Ikke med (ennå)

@@ -12,6 +12,7 @@
 <li>Søk etter brukere og emneknagger</li>
 <li>Tråder, profiler med profilfelt og profilbilde i stort format, følg/slutt å følge og legg til i liste</li>
 <li>Varsler, inkludert Pleroma-emojireaksjoner, og avstemninger</li>
+<li>Fem fargetemaer: Standard, Blå, Lilla, Mørk og Lys</li>
 <li>Sveip mellom faner, kompakt bunnmeny, dobbelttrykk på en fane for å oppdatere og på toppfeltet for å gå til toppen</li>
 <li>Chat: chat-ikonet på «Hjem» åpner chat.gaute.space i appen – Matrix-klienten <a href="https://cinny.in">Cinny</a> med appens farger</li>
 <li>«Om instansen» med instansens egen tekst og tjenestevilkår</li>

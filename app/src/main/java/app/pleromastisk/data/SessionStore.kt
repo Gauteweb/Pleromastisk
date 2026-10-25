@@ -177,6 +177,11 @@ class SessionStore(context: Context) {
         get() = sp.getString("language", null) ?: defaultLanguage()
         set(v) = sp.edit().putString("language", v).apply()
 
+    /** Valgt fargetema (id fra AppTheme). */
+    var theme: String?
+        get() = sp.getString("theme", null)
+        set(v) = sp.edit().putString("theme", v).apply()
+
     /** Bunnmenyen uten tekst under ikonene (slås av/på ved å holde inne en menyknapp). */
     var compactNav: Boolean
         get() = sp.getBoolean("compact_nav", false)

@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
@@ -208,6 +209,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
     var selectedListId by rememberSaveable { mutableStateOf<String?>(null) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showSwitcher by rememberSaveable { mutableStateOf(false) }
+    var showThemes by rememberSaveable { mutableStateOf(false) }
     val selectedList = lists.firstOrNull { it.id == selectedListId }
 
     fun go(target: String) = nav.navigate(target) {
@@ -231,6 +233,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
     )
 
     if (showAbout) AboutDialog(onDismiss = { showAbout = false })
+    if (showThemes) ThemePickerDialog(onDismiss = { showThemes = false })
     if (showSwitcher) {
         AccountSwitchDialog(
             accounts = state.accounts,
@@ -304,6 +307,9 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
                             }
                         }
                         if (route == PROFILE) {
+                            IconButton(onClick = { showThemes = true }) {
+                                Icon(Icons.Filled.Palette, stringResource(R.string.theme_button), tint = PT.TopBarText)
+                            }
                             IconButton(onClick = { showAbout = true }) {
                                 Icon(Icons.Filled.Info, stringResource(R.string.about_button), tint = PT.TopBarText)
                             }
@@ -708,7 +714,6 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
             ) {
                 Text(stringResource(R.string.about_p1), color = PT.Text)
-                Text(stringResource(R.string.about_p2), color = PT.Text)
                 Text(
                     buildAnnotatedString {
                         append(stringResource(R.string.about_p3))
