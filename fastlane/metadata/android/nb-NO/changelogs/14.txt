@@ -1,0 +1,4 @@
+- Redigering av innlegg og Markdown virker også på Mastodon og GoToSocial
+- «Om»-knappen i Lokal feed vises bare på Pleroma-instanser
+- Tydeligere aktivt menypunkt i temaene Blå, Lilla og Mørk
+- «Om Pleromastisk» viser versjonen og lenker til GitHub

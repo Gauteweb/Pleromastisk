@@ -1,0 +1,4 @@
+- Editing posts and Markdown now also work on Mastodon and GoToSocial
+- The "About" button in the local feed is only shown on Pleroma instances
+- Clearer active menu item in the Blue, Purple and Dark themes
+- "About Pleromastisk" shows the version and links to GitHub
