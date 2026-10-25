@@ -1,0 +1,1 @@
+- Appen vises på engelsk når telefonen ikke står på norsk (bokmål eller nynorsk)

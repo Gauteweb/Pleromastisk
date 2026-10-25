@@ -1,0 +1,1 @@
+- The app is now available in English, used whenever the phone is not set to Norwegian (Bokmål or Nynorsk)
