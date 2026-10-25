@@ -10,12 +10,13 @@
 <li>Egendefinerte emojier fra instansen, med søkbar emoji-velger</li>
 <li>Bildevisning med zoom og alt-tekst, forhåndsbilde av video og lenkeforhåndsvisning</li>
 <li>Søk etter brukere og emneknagger</li>
-<li>Tråder, profiler med profilfelt, følg/slutt å følge og legg til i liste</li>
+<li>Tråder, profiler med profilfelt og profilbilde i stort format, følg/slutt å følge og legg til i liste</li>
 <li>Varsler, inkludert Pleroma-emojireaksjoner, og avstemninger</li>
-<li>Sveip mellom faner, kompakt bunnmeny og dobbelttrykk for å gå til toppen</li>
+<li>Sveip mellom faner, kompakt bunnmeny, dobbelttrykk på en fane for å oppdatere og på toppfeltet for å gå til toppen</li>
+<li>Chat: chat-ikonet på «Hjem» åpner chat.gaute.space i appen – Matrix-klienten <a href="https://cinny.in">Cinny</a> med appens farger</li>
 <li>«Om instansen» med instansens egen tekst og tjenestevilkår</li>
 </ul>
 
-<p><b>Ikke med ennå:</b> søk i innleggstekst, chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil og avspilling av video i appen.</p>
+<p><b>Ikke med ennå:</b> søk i innleggstekst, Pleroma-chat, å sende emoji-reaksjoner, push-varsler, sanntidsstrøm, redigering av profil og avspilling av video i appen.</p>
 
-<p><b>Personvern:</b> Appen har ingen sporing eller analyse. Den snakker bare med instansen du velger, og tilgangstokenet lagres kun lokalt på enheten.</p>
+<p><b>Personvern:</b> Appen har ingen sporing eller analyse. Den snakker bare med instansen du velger, og tilgangstokenet lagres kun lokalt på enheten. Åpner du chatten, lastes den fra chat.gaute.space og snakker med Matrix-tjeneren du logger inn på der.</p>

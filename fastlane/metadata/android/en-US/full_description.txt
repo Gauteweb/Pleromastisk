@@ -10,12 +10,13 @@
 <li>Custom emoji from the instance, with a searchable emoji picker</li>
 <li>Image viewer with zoom and alt text, video thumbnails and link previews</li>
 <li>Search for users and hashtags</li>
-<li>Threads, profiles with profile fields, follow/unfollow and add to list</li>
+<li>Threads, profiles with profile fields and a full-size profile picture, follow/unfollow and add to list</li>
 <li>Notifications, including Pleroma emoji reactions, and polls</li>
-<li>Swipe between tabs, compact bottom bar and double-tap to scroll to top</li>
+<li>Swipe between tabs, compact bottom bar, double-tap a tab to refresh and the top bar to scroll to top</li>
+<li>Chat: the chat icon on Home opens chat.gaute.space in the app – the Matrix client <a href="https://cinny.in">Cinny</a> in the app's colours</li>
 <li>"About this instance" with the instance's own description and terms of service</li>
 </ul>
 
-<p><b>Not yet supported:</b> full-text search, chat, sending emoji reactions, push notifications, streaming, profile editing and in-app video playback.</p>
+<p><b>Not yet supported:</b> full-text search, Pleroma chat, sending emoji reactions, push notifications, streaming, profile editing and in-app video playback.</p>
 
-<p><b>Privacy:</b> No tracking or analytics. The app only talks to the instance you choose, and the access token is stored locally on the device.</p>
+<p><b>Privacy:</b> No tracking or analytics. The app only talks to the instance you choose, and the access token is stored locally on the device. If you open the chat, it is loaded from chat.gaute.space and talks to the Matrix server you log in to there.</p>
