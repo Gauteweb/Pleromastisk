@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import app.pleromastisk.Graph
 import app.pleromastisk.R
 
-/** Velg fargetema. Temaet tas i bruk med en gang og huskes til neste gang. */
+/** Velg fargetema. Temaet tas i bruk med en gang og huskes for brukeren man er logget inn som. */
 @Composable
 fun ThemePickerDialog(onDismiss: () -> Unit) {
     AlertDialog(
@@ -50,7 +50,7 @@ fun ThemePickerDialog(onDismiss: () -> Unit) {
                             .border(1.dp, if (active) PT.Border else PT.Border.copy(alpha = 0.35f))
                             .clickable {
                                 PT.theme = theme
-                                Graph.store.theme = theme.id
+                                Graph.store.saveTheme(theme.id)
                             }
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically,

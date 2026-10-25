@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PT.theme = AppTheme.fromId(Graph.store.theme)
+        PT.theme = AppTheme.fromId(Graph.store.activeTheme)
         if (savedInstanceState == null) handle(intent)
 
         setContent {

@@ -55,6 +55,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -176,6 +177,8 @@ fun PleromastiskRoot(auth: AuthViewModel) {
     var viewer by remember { mutableStateOf<Pair<List<MediaAttachment>, Int>?>(null) }
     // Chatten er ikke knyttet til Pleroma-brukeren, og holdes i live også når man bytter bruker
     val chat = rememberChatSession()
+    // Hver bruker har sitt eget tema: bytt når en annen bruker blir aktiv (eller alle er logget ut)
+    LaunchedEffect(state.activeKey) { PT.theme = AppTheme.fromId(Graph.store.activeTheme) }
     CompositionLocalProvider(LocalImageViewer provides { images, index -> viewer = images to index }) {
         Box(Modifier.fillMaxSize()) {
             if (!state.loggedIn) {

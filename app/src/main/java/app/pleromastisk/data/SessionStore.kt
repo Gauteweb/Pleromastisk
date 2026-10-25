@@ -28,6 +28,8 @@ data class SavedAccount(
     val lastSeenNotification: String? = null,
     /** Om instansen er Pleroma; null til det er sjekket. */
     val isPleroma: Boolean? = null,
+    /** Fargetemaet brukeren har valgt (id fra AppTheme); null = sist valgte tema i appen. */
+    val theme: String? = null,
 ) {
     /** «navn@instans», også for lokale brukere der instansen ikke står i acct. */
     val handle: String
@@ -50,6 +52,10 @@ class SessionStore(context: Context) {
 
     init {
         migrateSingleAccount()
+        // Før tema per bruker: brukerne som allerede finnes, beholder temaet appen hadde
+        theme?.let { current ->
+            if (accounts.any { it.theme == null }) saveAccounts(accounts.map { it.copy(theme = it.theme ?: current) })
+        }
     }
 
     // ---------- Brukere ----------
@@ -84,7 +90,8 @@ class SessionStore(context: Context) {
     /** Legger til en ny bruker og gjør den aktiv. */
     @Synchronized
     fun addAccount(instance: String, clientId: String, clientSecret: String, token: String): SavedAccount {
-        val account = SavedAccount(UUID.randomUUID().toString(), instance, clientId, clientSecret, token)
+        // En ny bruker starter med temaet som er i bruk nå
+        val account = SavedAccount(UUID.randomUUID().toString(), instance, clientId, clientSecret, token, theme = theme)
         saveAccounts(accounts + account)
         activeKey = account.key
         return account
@@ -179,10 +186,22 @@ class SessionStore(context: Context) {
         get() = sp.getString("language", null) ?: defaultLanguage()
         set(v) = sp.edit().putString("language", v).apply()
 
-    /** Valgt fargetema (id fra AppTheme). */
+    /**
+     * Sist valgte fargetema (id fra AppTheme). Brukes på innloggingsskjermen og for brukere som
+     * ikke har valgt tema selv.
+     */
     var theme: String?
         get() = sp.getString("theme", null)
         set(v) = sp.edit().putString("theme", v).apply()
+
+    /** Temaet for den aktive brukeren, eller det sist valgte hvis brukeren ikke har valgt noe. */
+    val activeTheme: String? get() = active?.theme ?: theme
+
+    /** Lagrer temaet på den aktive brukeren, og som sist valgte tema. */
+    fun saveTheme(id: String) {
+        theme = id
+        updateActive { it.copy(theme = id) }
+    }
 
     /** Bunnmenyen uten tekst under ikonene (slås av/på ved å holde inne en menyknapp). */
     var compactNav: Boolean
