@@ -1,0 +1,3 @@
+- New Media tab: only posts with images or video, image first
+- Federated posts moved to the menu on Home
+- The chat is now called Matrix and has an info button

@@ -1,0 +1,3 @@
+- Ny fane «Bilder»: bare innlegg med bilder eller video, med bildet først
+- «Fødererte innlegg» er flyttet til menyen i «Hjem»
+- Chatten heter nå «Matrix» og har en infoknapp
