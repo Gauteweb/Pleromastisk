@@ -19,7 +19,7 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 **Lese**
 - Innlogging med OAuth på instansens egen side – passordet går aldri via appen.
 - Flere brukere, også på ulike instanser. Bytt med «Bytt bruker» på profilsiden.
-- Tidslinjer: Hjem, lokal feed, Føderert og egne lister (velg i «Hjem ▾»).
+- Tidslinjer: Hjem, lokal feed, fødererte innlegg og egne lister (velg i «Hjem ▾»).
 - Tråder, profiler med profilfelt og bekreftede lenker, og følg/slutt å følge.
 - Lenkeforhåndsvisning, antall svar/delinger/favoritter og «via <app>».
 - Egendefinerte emojier fra instansen, avstemninger og varsler med filter for **Alle** eller **Svar**.
@@ -34,13 +34,15 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 **Bilder og video**
 - Bilder vises uten beskjæring. Trykk for fullskjerm med alt-tekst, zoom og sveip mellom bilder.
 - Video vises med forhåndsbilde og spilles av i en annen app.
+- Fanen «Bilder» viser de samme feedene som «Hjem», men bare innlegg med bilder eller video – med
+  bildet først og teksten under, som i Pixelfed og Instagram. Flere bilder blas sidelengs.
 
 **Navigasjon**
-- Bunnmeny: Hjem · Føderert · Varsler · Søk · Skriv · Profil. Hold inne en knapp for å skjule tekstene.
+- Bunnmeny: Hjem · Bilder · Varsler · Søk · Skriv · Profil. Hold inne en knapp for å skjule tekstene.
 - Sveip mellom fanene. Dobbelttrykk på en fane for å oppdatere, eller på toppfeltet for å rulle til toppen.
 
 **Chat og annet**
-- Chat-ikonet på «Hjem» åpner [chat.gaute.space](https://chat.gaute.space) i appen – Matrix-klienten
+- Chat-ikonet på «Hjem» åpner «Matrix»: [chat.gaute.space](https://chat.gaute.space) i appen – Matrix-klienten
   [Cinny](https://cinny.in) med appens farger. Forbindelsen holdes i live når du bytter faner.
 - «Om»-knappen i lokal feed viser instansens «Om»-side og tjenestevilkår.
 - Fem fargetemaer i samme stil – Standard, Blå, Lilla, Mørk og Lys – velges med palett-knappen på «Profil».

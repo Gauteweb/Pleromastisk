@@ -67,6 +67,9 @@ data class MediaAttachment(
     /** Rå `meta`-blokk (størrelse m.m.). Tolkes defensivt – formatet varierer mellom tjenere. */
     val meta: JsonElement? = null,
 ) {
+    val isVisual: Boolean
+        get() = type == "image" || type == "video" || type == "gifv"
+
     /** Bredde/høyde-forhold hvis instansen oppgir det. */
     val aspectRatio: Float?
         get() = runCatching {
@@ -134,7 +137,11 @@ data class Status(
     @SerialName("edited_at") val editedAt: String? = null,
     val application: AppInfo? = null,
     val language: String? = null,
-)
+) {
+    /** Har minst ett bilde eller én video (ikke bare lyd eller ukjente vedlegg). */
+    val hasVisualMedia: Boolean
+        get() = mediaAttachments.any { it.isVisual }
+}
 
 @Serializable
 data class StatusSource(

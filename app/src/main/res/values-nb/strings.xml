@@ -7,13 +7,14 @@
     <string name="nav_home">Hjem</string>
     <string name="nav_local">Lokalt</string>
     <string name="nav_search">Søk</string>
-    <string name="nav_federated">Føderert</string>
+    <string name="nav_media">Bilder</string>
     <string name="nav_compose">Skriv</string>
     <string name="nav_notifications">Varsler</string>
     <string name="nav_profile">Profil</string>
     <string name="title_home">Hjem</string>
     <string name="title_local">Lokal tidslinje</string>
     <string name="title_federated">Fødererte innlegg</string>
+    <string name="title_media">Bilder og video</string>
     <string name="title_notifications">Varsler</string>
     <string name="title_search">Søk</string>
     <string name="title_profile">Min profil</string>
@@ -36,8 +37,10 @@
 
     <!-- Om appen -->
     <string name="about_button">Om appen</string>
-    <string name="chat_button">Chat</string>
-    <string name="title_chat">Chat</string>
+    <string name="chat_button">Matrix</string>
+    <string name="title_chat">Matrix</string>
+    <string name="chat_info_button">Om Matrix</string>
+    <string name="chat_info_text">Her kan du logge på hvilken som helst Matrix-server, men du må ha opprettet en bruker først via nettleseren.\n\nDenne funksjonen leveres fra gaute.space med Matrix-klienten Cinny.</string>
     <string name="about_title">Om Pleromastisk</string>
     <string name="about_p1">Denne appen er utviklet med Claude Code av Gaute Holmin for Pleroma Social, men den virker også for Mastodon og GoToSocial.</string>
     <string name="about_p3">Du kan laste ned kildekoden og videreutvikle appen selv fra</string>
@@ -110,6 +113,9 @@
 
     <!-- Tidslinjer -->
     <string name="empty_timeline">Ingen innlegg å vise ennå.</string>
+    <string name="empty_media">Ingen innlegg med bilder eller video ennå.</string>
+    <string name="media_info_button">Om denne fanen</string>
+    <string name="media_info_text">Her vises kun innlegg som inneholder et eller flere bilder eller videoer, og de vises med fokus på media istedet for tekst.</string>
     <string name="retry">Prøv igjen</string>
     <string name="boosted_by">%1$s delte</string>
     <string name="show_more">Vis</string>

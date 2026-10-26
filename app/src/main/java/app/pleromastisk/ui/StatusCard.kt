@@ -5,8 +5,12 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -223,6 +227,153 @@ fun StatusCard(
     }
 }
 
+/**
+ * Kort i «Bilder»-fanen, slik Pixelfed og Instagram viser innlegg: avsender øverst, så bildene
+ * (eller videoen) i full bredde, knapperaden, og til slutt teksten.
+ */
+@Composable
+fun MediaPostCard(status: Status, actions: StatusActions, modifier: Modifier = Modifier) {
+    val s = status.reblog ?: status
+    var revealed by rememberSaveable(s.id) { mutableStateOf(s.spoilerText.isBlank()) }
+    val media = remember(s.mediaAttachments) { s.mediaAttachments.filter { it.isVisual } }
+
+    Panel(modifier.clickable { actions.onOpenStatus(s) }) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+            if (status.reblog != null) {
+                Row(Modifier.padding(bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Repeat, null, tint = PT.Green, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    EmojiText(
+                        stringResource(R.string.boosted_by, status.account.name),
+                        status.account.emojis,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PT.Muted,
+                        maxLines = 1,
+                    )
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Avatar(s.account.avatar, 34, Modifier.clickable { actions.onOpenProfile(s.account) })
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f)) {
+                    EmojiText(
+                        s.account.name, s.account.emojis,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PT.Text, fontWeight = FontWeight.Bold, maxLines = 1,
+                    )
+                    Text(
+                        "@" + s.account.acct,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PT.Muted, maxLines = 1,
+                    )
+                }
+                Spacer(Modifier.width(6.dp))
+                Icon(visibilityIcon(s.visibility), null, tint = PT.Muted, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(relativeTime(s.createdAt), style = MaterialTheme.typography.bodySmall, color = PT.Muted)
+            }
+        }
+
+        // Innholdsvarsel skjuler også bildene, med varselteksten som etikett
+        val hiddenLabel = when {
+            s.spoilerText.isNotBlank() -> s.spoilerText.takeIf { !revealed }
+            s.sensitive -> ""
+            else -> null
+        }
+        MediaCarousel(media, hiddenLabel) { revealed = true }
+
+        Column(Modifier.padding(horizontal = 10.dp)) {
+            ActionRow(s, actions)
+            if (s.spoilerText.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Warning, null, tint = PT.Orange, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    EmojiText(s.spoilerText, s.emojis, Modifier.weight(1f), color = PT.Text, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(6.dp))
+                    PButton(
+                        text = stringResource(if (revealed) R.string.show_less else R.string.show_more),
+                        onClick = { revealed = !revealed },
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+            if (revealed) {
+                if (s.content.isNotBlank() && !isBlankHtml(s.content)) {
+                    RichText(
+                        s.content, s.emojis, style = MaterialTheme.typography.bodyMedium, color = PT.Text,
+                        mentions = s.mentions,
+                    )
+                }
+                s.poll?.let { PollView(s, it, actions) }
+            }
+            Spacer(Modifier.height(10.dp))
+        }
+    }
+}
+
+/**
+ * Bildene i et innlegg i full bredde. Flere bilder blas sidelengs, med «2/3» i hjørnet.
+ * [hiddenLabel] ulik null: bildene er skjult bak et trykkbart felt (tom tekst = «sensitivt innhold»).
+ */
+@Composable
+private fun MediaCarousel(items: List<MediaAttachment>, hiddenLabel: String?, onReveal: () -> Unit) {
+    if (items.isEmpty()) return
+    var shownSensitive by rememberSaveable(items.first().id) { mutableStateOf(false) }
+    val open = rememberMediaOpener(items)
+    // Høyden følger første bilde, innenfor Instagrams grenser (4:5 til 1,91:1); resten tilpasses
+    val ratio = items.first().aspectRatio?.coerceIn(0.8f, 1.91f) ?: 1f
+    val pager = rememberPagerState { items.size }
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .aspectRatio(ratio)
+            .background(PT.Bg)
+            .clipToBounds(),
+    ) {
+        if (hiddenLabel != null && !(hiddenLabel.isEmpty() && shownSensitive)) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clickable { if (hiddenLabel.isEmpty()) shownSensitive = true else onReveal() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    hiddenLabel.ifEmpty { stringResource(R.string.sensitive_media) },
+                    color = PT.Orange, modifier = Modifier.padding(16.dp),
+                )
+            }
+        } else {
+            HorizontalPager(pager, Modifier.fillMaxSize(), key = { items[it].id }) { page ->
+                val m = items[page]
+                Box(Modifier.fillMaxSize().clickable { open(m) }, contentAlignment = Alignment.Center) {
+                    val shown = mediaModel(m)
+                    if (shown != null) {
+                        AsyncImage(
+                            model = shown,
+                            contentDescription = m.description,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    MediaOverlays(m)
+                }
+            }
+            if (items.size > 1) {
+                Text(
+                    "${pager.currentPage + 1}/${items.size}",
+                    color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun ActionRow(s: Status, actions: StatusActions) {
     val canBoost = s.visibility == "public" || s.visibility == "unlisted" || s.reblogged
@@ -353,15 +504,7 @@ private fun MoreMenu(s: Status, actions: StatusActions) {
 private fun MediaGrid(items: List<MediaAttachment>, sensitive: Boolean) {
     if (items.isEmpty()) return
     var hidden by rememberSaveable(items.firstOrNull()?.id) { mutableStateOf(sensitive) }
-    val openViewer = LocalImageViewer.current
-    val ctx = LocalContext.current
-    val images = remember(items) { items.filter { it.type == "image" } }
-
-    // Bilder åpnes i appens egen visning (med alt-tekst); video og annet åpnes i en annen app.
-    val open: (MediaAttachment) -> Unit = { m ->
-        if (m.type == "image") openViewer(images, images.indexOf(m).coerceAtLeast(0))
-        else runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(m.url))) }
-    }
+    val open = rememberMediaOpener(items)
 
     Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (hidden) {
@@ -391,19 +534,66 @@ private fun MediaGrid(items: List<MediaAttachment>, sensitive: Boolean) {
     }
 }
 
+/**
+ * Hva som skal tegnes for et vedlegg: bilder i full oppløsning, andre typer (video m.m.) via
+ * forhåndsvisningen. Pleroma lager ofte ingen egen forhåndsvisning for video (preview_url peker da
+ * på selve videofilen) – da henter Coil et stillbilde fra videoen (se VideoFrameDecoder i appen).
+ */
 @Composable
-private fun MediaTile(m: MediaAttachment, single: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // Bilder vises i full oppløsning; andre typer (video m.m.) bruker forhåndsvisningen.
-    // Pleroma lager ofte ingen egen forhåndsvisning for video (preview_url peker da på selve
-    // videofilen) – da henter Coil et stillbilde fra videoen (se VideoFrameDecoder i appen).
+private fun mediaModel(m: MediaAttachment): Any? {
     val isVideo = m.type == "video" || m.type == "gifv"
-    val shown: Any? = when {
+    return when {
         m.type == "image" -> m.url
         isVideo -> (m.previewUrl?.takeIf { it.isNotBlank() } ?: m.url.takeIf { it.isNotBlank() })?.let { src ->
             ImageRequest.Builder(LocalContext.current).data(src).videoFrameMillis(1000).build()
         }
         else -> m.previewUrl?.takeIf { it.isNotBlank() }
     }
+}
+
+/** Play-knapp for video og ALT-merke for bilder med alt-tekst, oppå selve bildet. */
+@Composable
+private fun BoxScope.MediaOverlays(m: MediaAttachment) {
+    if (m.type != "image") {
+        // Play-knapp på mørk, rund bakgrunn så den synes over både lyse og mørke bilder
+        Icon(
+            Icons.Filled.PlayArrow, stringResource(R.string.attachment_open),
+            tint = Color.White,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(56.dp)
+                .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                .padding(8.dp),
+        )
+    }
+    if (!m.description.isNullOrBlank()) {
+        Text(
+            stringResource(R.string.alt_badge),
+            color = PT.Fg, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(4.dp)
+                .background(PT.TopBarText)
+                .padding(horizontal = 5.dp, vertical = 2.dp),
+        )
+    }
+}
+
+/** Bilder åpnes i appens egen visning (med alt-tekst); video og annet åpnes i en annen app. */
+@Composable
+private fun rememberMediaOpener(items: List<MediaAttachment>): (MediaAttachment) -> Unit {
+    val openViewer = LocalImageViewer.current
+    val ctx = LocalContext.current
+    val images = remember(items) { items.filter { it.type == "image" } }
+    return { m ->
+        if (m.type == "image") openViewer(images, images.indexOf(m).coerceAtLeast(0))
+        else runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(m.url))) }
+    }
+}
+
+@Composable
+private fun MediaTile(m: MediaAttachment, single: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val shown = mediaModel(m)
     val ratio = if (single) m.aspectRatio?.coerceIn(0.4f, 3f) else 1f
     Box(
         modifier
@@ -424,29 +614,7 @@ private fun MediaTile(m: MediaAttachment, single: Boolean, onClick: () -> Unit, 
         } else {
             Box(Modifier.fillMaxWidth().height(90.dp))
         }
-        if (m.type != "image") {
-            // Play-knapp på mørk, rund bakgrunn så den synes over både lyse og mørke bilder
-            Icon(
-                Icons.Filled.PlayArrow, stringResource(R.string.attachment_open),
-                tint = Color.White,
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(Color.Black.copy(alpha = 0.55f), CircleShape)
-                    .padding(8.dp),
-            )
-        }
-        // ALT-merke når bildet har alt-tekst
-        if (!m.description.isNullOrBlank()) {
-            Text(
-                stringResource(R.string.alt_badge),
-                color = PT.Fg, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(4.dp)
-                    .background(PT.TopBarText)
-                    .padding(horizontal = 5.dp, vertical = 2.dp),
-            )
-        }
+        MediaOverlays(m)
     }
 }
 

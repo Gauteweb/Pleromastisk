@@ -79,6 +79,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.pleromastisk.R
 import app.pleromastisk.data.Account
 import app.pleromastisk.data.Notification
+import app.pleromastisk.data.Status
 import app.pleromastisk.relativeTime
 import app.pleromastisk.vm.AccountViewModel
 import app.pleromastisk.vm.AuthViewModel
@@ -222,6 +223,8 @@ fun StatusFeed(
     actions: StatusActions,
     modifier: Modifier = Modifier,
     header: (LazyListScope.() -> Unit)? = null,
+    emptyText: Int = R.string.empty_timeline,
+    card: @Composable (Status, StatusActions) -> Unit = { s, a -> StatusCard(s, a) },
 ) {
     val items by vm.items.collectAsStateWithLifecycle()
     val paging by vm.paging.collectAsStateWithLifecycle()
@@ -250,9 +253,9 @@ fun StatusFeed(
             if (paging.error != null && items.isEmpty()) {
                 item { ErrorPanel(paging.error ?: "", onRetry = { vm.refresh() }) }
             } else if (items.isEmpty() && !paging.refreshing) {
-                item { Panel { Text(stringResource(R.string.empty_timeline), Modifier.padding(14.dp), color = PT.Text) } }
+                item { Panel { Text(stringResource(emptyText), Modifier.padding(14.dp), color = PT.Text) } }
             }
-            items(items, key = { it.id }) { StatusCard(it, actions) }
+            items(items, key = { it.id }) { card(it, actions) }
             if (paging.loading) item { LoadingRow() }
         }
     }

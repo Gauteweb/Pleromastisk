@@ -156,12 +156,14 @@ class ApiClient(private val store: SessionStore) {
 
     // ---------- Tidslinjer ----------
 
-    suspend fun timeline(kind: TimelineKind, maxId: String?): List<Status> {
+    /** [onlyMedia] gjelder bare offentlige tidslinjer (hjemmetidslinjen støtter det ikke). */
+    suspend fun timeline(kind: TimelineKind, maxId: String?, onlyMedia: Boolean = false): List<Status> {
+        val media = if (onlyMedia) "only_media=true" else ""
         val path = when (kind) {
             TimelineKind.HOME -> "/api/v1/timelines/home"
-            TimelineKind.LOCAL -> "/api/v1/timelines/public?local=true"
-            TimelineKind.FEDERATED -> "/api/v1/timelines/public"
-        }
+            TimelineKind.LOCAL -> "/api/v1/timelines/public?local=true&$media"
+            TimelineKind.FEDERATED -> "/api/v1/timelines/public?$media"
+        }.trimEnd('?', '&')
         return get(withPaging(path, maxId))
     }
 

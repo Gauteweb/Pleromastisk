@@ -5,6 +5,7 @@
 <li>OAuth login – your password never passes through the app</li>
 <li>Multiple accounts, also on different instances, with "Switch account" on the profile page</li>
 <li>Timelines: Home, Local, Federated and your own lists</li>
+<li>Media tab: only posts with images or video, image first – like Pixelfed and Instagram</li>
 <li>Reply, boost, favourite, bookmark, edit and delete your own posts</li>
 <li>Compose posts with visibility, content warning, up to 4 images with alt text, Markdown and language tagging (nn, nb, en)</li>
 <li>Custom emoji from the instance, with a searchable emoji picker</li>

@@ -88,11 +88,36 @@ abstract class PagedStatusViewModel : StatusListViewModel() {
     private val _paging = MutableStateFlow(Paging())
     val paging: StateFlow<Paging> = _paging.asStateFlow()
     private var refreshJob: Job? = null
+    private var moreJob: Job? = null
+
+    /** Siste innlegg serveren sendte (før filtrering i appen) – brukes til «hent flere». */
+    private var cursor: String? = null
 
     protected abstract suspend fun fetch(maxId: String?): List<Status>
 
+    /** Filter i appen. Luker det bort mye, hentes flere sider på rad (se [maxPagesPerLoad]). */
+    protected open fun accept(s: Status) = true
+
+    /** Hvor mange sider som høyst hentes på rad for å fylle opp etter [accept]. */
+    protected open val maxPagesPerLoad = 1
+
     init {
         viewModelScope.launch { Graph.posted.collect { if (_items.value.isNotEmpty()) refresh() } }
+    }
+
+    /** Henter én eller flere sider fra [from]. Gir innleggene som slapp gjennom, og om enden er nådd. */
+    private suspend fun fetchFiltered(from: String?): Pair<List<Status>, Boolean> {
+        val out = mutableListOf<Status>()
+        var maxId = from
+        repeat(maxPagesPerLoad) {
+            val page = fetch(maxId)
+            if (page.isEmpty()) return out to true
+            maxId = page.last().id
+            cursor = maxId
+            out += page.filter(::accept)
+            if (out.size >= MIN_PER_LOAD) return out to false
+        }
+        return out to false
     }
 
     fun ensureLoaded() {
@@ -101,12 +126,13 @@ abstract class PagedStatusViewModel : StatusListViewModel() {
 
     fun refresh() {
         refreshJob?.cancel()
+        moreJob?.cancel()
         refreshJob = viewModelScope.launch {
-            _paging.update { it.copy(refreshing = true, error = null) }
+            _paging.update { it.copy(refreshing = true, loading = false, error = null) }
             try {
-                val page = fetch(null)
+                val (page, end) = fetchFiltered(null)
                 _items.value = page
-                _paging.update { it.copy(refreshing = false, loading = false, endReached = page.isEmpty()) }
+                _paging.update { it.copy(refreshing = false, loading = false, endReached = end) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -117,15 +143,15 @@ abstract class PagedStatusViewModel : StatusListViewModel() {
 
     fun loadMore() {
         val p = _paging.value
-        val last = _items.value.lastOrNull() ?: return
+        val from = cursor ?: return
         if (p.loading || p.refreshing || p.endReached) return
-        viewModelScope.launch {
+        moreJob = viewModelScope.launch {
             _paging.update { it.copy(loading = true) }
             try {
-                val page = fetch(last.id)
+                val (page, end) = fetchFiltered(from)
                 val known = _items.value.map { it.id }.toSet()
                 _items.update { it + page.filter { s -> s.id !in known } }
-                _paging.update { it.copy(loading = false, endReached = page.isEmpty()) }
+                _paging.update { it.copy(loading = false, endReached = end) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -133,10 +159,24 @@ abstract class PagedStatusViewModel : StatusListViewModel() {
             }
         }
     }
+
+    private companion object {
+        const val MIN_PER_LOAD = 5
+    }
 }
 
 class TimelineViewModel(private val kind: TimelineKind) : PagedStatusViewModel() {
     override suspend fun fetch(maxId: String?) = Graph.api.timeline(kind, maxId)
+}
+
+/**
+ * Samme feed som i «Hjem», men bare innlegg med bilder eller video (fanen «Bilder»).
+ * [source] henter én side; offentlige tidslinjer kan be tjeneren om å filtrere selv.
+ */
+class MediaFeedViewModel(private val source: suspend (maxId: String?) -> List<Status>) : PagedStatusViewModel() {
+    override suspend fun fetch(maxId: String?) = source(maxId)
+    override fun accept(s: Status) = (s.reblog ?: s).hasVisualMedia
+    override val maxPagesPerLoad = 5
 }
 
 class TagViewModel(private val tag: String) : PagedStatusViewModel() {

@@ -7,13 +7,14 @@
     <string name="nav_home">Home</string>
     <string name="nav_local">Local</string>
     <string name="nav_search">Search</string>
-    <string name="nav_federated">Federated</string>
+    <string name="nav_media">Media</string>
     <string name="nav_compose">Write</string>
     <string name="nav_notifications">Alerts</string>
     <string name="nav_profile">Profile</string>
     <string name="title_home">Home</string>
     <string name="title_local">Local timeline</string>
     <string name="title_federated">Federated posts</string>
+    <string name="title_media">Images and video</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_search">Search</string>
     <string name="title_profile">My profile</string>
@@ -36,8 +37,10 @@
 
     <!-- About the app -->
     <string name="about_button">About the app</string>
-    <string name="chat_button">Chat</string>
-    <string name="title_chat">Chat</string>
+    <string name="chat_button">Matrix</string>
+    <string name="title_chat">Matrix</string>
+    <string name="chat_info_button">About Matrix</string>
+    <string name="chat_info_text">Here you can log in to any Matrix server, but you must have created an account in the browser first.\n\nThis feature is provided by gaute.space with the Matrix client Cinny.</string>
     <string name="about_title">About Pleromastisk</string>
     <string name="about_p1">This app was developed with Claude Code by Gaute Holmin for Pleroma Social, but it also works with Mastodon and GoToSocial.</string>
     <string name="about_p3">You can download the source code and develop the app further yourself from</string>
@@ -110,6 +113,9 @@
 
     <!-- Timelines -->
     <string name="empty_timeline">No posts to show yet.</string>
+    <string name="empty_media">No posts with images or video yet.</string>
+    <string name="media_info_button">About this tab</string>
+    <string name="media_info_text">Only posts that contain one or more images or videos are shown here, and they are displayed with the focus on media instead of text.</string>
     <string name="retry">Try again</string>
     <string name="boosted_by">%1$s boosted</string>
     <string name="show_more">Show</string>

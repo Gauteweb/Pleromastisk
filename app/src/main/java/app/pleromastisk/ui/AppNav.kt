@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
@@ -108,6 +109,7 @@ import app.pleromastisk.vm.AuthState
 import app.pleromastisk.vm.AuthViewModel
 import app.pleromastisk.vm.ListTimelineViewModel
 import app.pleromastisk.vm.ListsViewModel
+import app.pleromastisk.vm.MediaFeedViewModel
 import app.pleromastisk.vm.NotificationsViewModel
 import app.pleromastisk.vm.SearchViewModel
 import app.pleromastisk.vm.TagViewModel
@@ -119,9 +121,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
 private const val HOME = "home"
-/** Spesialverdi for «valgt feed» i Hjem: lokal tidslinje (kolliderer ikke med liste-ID-er). */
+/** Spesialverdier for «valgt feed» i Hjem og Bilder (kolliderer ikke med liste-ID-er). */
 private const val LOCAL_FEED = "__local__"
-private const val FEDERATED = "federated"
+private const val FEDERATED_FEED = "__federated__"
+private const val MEDIA = "media"
 private const val NOTIFICATIONS = "notifications"
 private const val SEARCH = "search"
 private const val PROFILE = "profile"
@@ -131,10 +134,10 @@ private const val COMPOSE_BASE = "compose"
 private const val COMPOSE =
     "compose?replyId={replyId}&replyMentions={replyMentions}&replyVis={replyVis}&editId={editId}"
 
-private val TopLevel = setOf(HOME, FEDERATED, NOTIFICATIONS, SEARCH, PROFILE)
+private val TopLevel = setOf(HOME, MEDIA, NOTIFICATIONS, SEARCH, PROFILE)
 
 /** Fanene i bunnmenyen, i samme rekkefølge som knappene (brukes ved sveiping). */
-private val TabOrder = listOf(HOME, FEDERATED, NOTIFICATIONS, SEARCH, PROFILE)
+private val TabOrder = listOf(HOME, MEDIA, NOTIFICATIONS, SEARCH, PROFILE)
 
 /**
  * Sveip til venstre/høyre på en fane bytter til neste/forrige fane i bunnmenyen.
@@ -206,14 +209,17 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
     val showChrome = route != null && !route.startsWith(COMPOSE_BASE)
     val me = state.me
 
-    // Valgt liste i «Hjem» (null = vanlig hjemmetidslinje)
+    // Valgt feed i «Hjem» og «Bilder», hver for seg (null = vanlig hjemmetidslinje)
     val listsVm: ListsViewModel = viewModel(key = "lists_${state.activeKey}")
     val lists by listsVm.lists.collectAsStateWithLifecycle()
     var selectedListId by rememberSaveable { mutableStateOf<String?>(null) }
+    var mediaListId by rememberSaveable { mutableStateOf<String?>(null) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showSwitcher by rememberSaveable { mutableStateOf(false) }
     var showThemes by rememberSaveable { mutableStateOf(false) }
-    val selectedList = lists.firstOrNull { it.id == selectedListId }
+    var showMediaInfo by rememberSaveable { mutableStateOf(false) }
+    var showChatInfo by rememberSaveable { mutableStateOf(false) }
+    val feedId = if (route == MEDIA) mediaListId else selectedListId
 
     fun go(target: String) = nav.navigate(target) {
         popUpTo(nav.graph.findStartDestination().id) { saveState = true }
@@ -237,6 +243,8 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
 
     if (showAbout) AboutDialog(onDismiss = { showAbout = false })
     if (showThemes) ThemePickerDialog(onDismiss = { showThemes = false })
+    if (showMediaInfo) InfoDialog(R.string.title_media, R.string.media_info_text, onDismiss = { showMediaInfo = false })
+    if (showChatInfo) InfoDialog(R.string.title_chat, R.string.chat_info_text, onDismiss = { showChatInfo = false })
     if (showSwitcher) {
         AccountSwitchDialog(
             accounts = state.accounts,
@@ -281,20 +289,19 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
             if (showChrome) {
                 PTopBar(
                     title = when {
-                        route == HOME && selectedListId == LOCAL_FEED -> stringResource(R.string.menu_local_feed)
-                        route == HOME && selectedList != null -> selectedList.title
+                        (route == HOME || route == MEDIA) && feedId != null -> feedTitle(feedId, lists) ?: titleFor(route)
                         route?.startsWith("tag/") == true -> "#" + entry?.arguments?.getString("tag").orEmpty()
                         else -> titleFor(route)
                     },
                     onBack = if (route in TopLevel) null else ({ nav.popBackStack() }),
                     onDoubleTap = { scrollToTop.tryEmit(Unit) },
-                    titleContent = if (route == HOME) { title ->
+                    titleContent = if (route == HOME || route == MEDIA) { title ->
                         ListMenuTitle(
                             title = title,
                             lists = lists,
-                            selectedId = selectedListId,
+                            selectedId = feedId,
                             onOpen = { listsVm.refresh() },
-                            onSelect = { selectedListId = it },
+                            onSelect = { if (route == MEDIA) mediaListId = it else selectedListId = it },
                         )
                     } else null,
                     actions = {
@@ -308,6 +315,16 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
                         } else if (route == HOME) {
                             IconButton(onClick = { nav.navigate(CHAT) }) {
                                 Icon(Icons.AutoMirrored.Filled.Chat, stringResource(R.string.chat_button), tint = PT.TopBarText)
+                            }
+                        }
+                        if (route == MEDIA) {
+                            IconButton(onClick = { showMediaInfo = true }) {
+                                Icon(Icons.Filled.Info, stringResource(R.string.media_info_button), tint = PT.TopBarText)
+                            }
+                        }
+                        if (route == CHAT) {
+                            IconButton(onClick = { showChatInfo = true }) {
+                                Icon(Icons.Filled.Info, stringResource(R.string.chat_info_button), tint = PT.TopBarText)
                             }
                         }
                         if (route == PROFILE) {
@@ -362,6 +379,10 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
                         key = "tl_local",
                         factory = viewModelFactory { initializer { TimelineViewModel(TimelineKind.LOCAL) } },
                     )
+                    FEDERATED_FEED -> viewModel<TimelineViewModel>(
+                        key = "tl_federated",
+                        factory = viewModelFactory { initializer { TimelineViewModel(TimelineKind.FEDERATED) } },
+                    )
                     else -> viewModel<ListTimelineViewModel>(
                         key = "list_$listId",
                         factory = viewModelFactory { initializer { ListTimelineViewModel(listId) } },
@@ -369,14 +390,25 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
                 }
                 StatusFeed(vm, actionsFor(vm))
             }
-            for ((r, kind) in listOf(FEDERATED to TimelineKind.FEDERATED)) {
-                composable(r) {
-                    val vm: TimelineViewModel = viewModel(
-                        key = "tl_$r",
-                        factory = viewModelFactory { initializer { TimelineViewModel(kind) } },
-                    )
-                    StatusFeed(vm, actionsFor(vm))
-                }
+            composable(MEDIA) {
+                // Samme feeder som i «Hjem», men bare innlegg med bilder/video, bildet først
+                val listId = mediaListId
+                val vm: MediaFeedViewModel = viewModel(
+                    key = "media_${listId ?: HOME}",
+                    factory = viewModelFactory {
+                        initializer {
+                            MediaFeedViewModel { maxId ->
+                                when (listId) {
+                                    null -> Graph.api.timeline(TimelineKind.HOME, maxId)
+                                    LOCAL_FEED -> Graph.api.timeline(TimelineKind.LOCAL, maxId, onlyMedia = true)
+                                    FEDERATED_FEED -> Graph.api.timeline(TimelineKind.FEDERATED, maxId, onlyMedia = true)
+                                    else -> Graph.api.listTimeline(listId, maxId)
+                                }
+                            }
+                        }
+                    },
+                )
+                StatusFeed(vm, actionsFor(vm), emptyText = R.string.empty_media) { s, a -> MediaPostCard(s, a) }
             }
             composable(NOTIFICATIONS) {
                 val vm: NotificationsViewModel = viewModel()
@@ -476,11 +508,19 @@ private fun replyRoute(s: Status, myAcct: String?): String {
     return "compose?replyId=${Uri.encode(s.id)}&replyMentions=${Uri.encode(handles)}&replyVis=${Uri.encode(s.visibility)}"
 }
 
+/** Navnet på en valgt feed i Hjem/Bilder, eller null når listen ikke (lenger) finnes. */
+@Composable
+private fun feedTitle(feedId: String, lists: List<MastoList>): String? = when (feedId) {
+    LOCAL_FEED -> stringResource(R.string.menu_local_feed)
+    FEDERATED_FEED -> stringResource(R.string.title_federated)
+    else -> lists.firstOrNull { it.id == feedId }?.title
+}
+
 @Composable
 private fun titleFor(route: String?): String = stringResource(
     when {
         route == HOME -> R.string.title_home
-        route == FEDERATED -> R.string.title_federated
+        route == MEDIA -> R.string.title_media
         route == NOTIFICATIONS -> R.string.title_notifications
         route == SEARCH -> R.string.title_search
         route == PROFILE -> R.string.title_profile
@@ -521,7 +561,7 @@ private fun PTopBar(
     }
 }
 
-/** Bunnlinje: Hjem · Føderert · Varsler · Søk · [Skriv] · Profil */
+/** Bunnlinje: Hjem · Bilder · Varsler · Søk · [Skriv] · Profil */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PBottomBar(
@@ -559,7 +599,7 @@ private fun PBottomBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             NavItem(Icons.Filled.Home, R.string.nav_home, route == HOME, compact, toggle) { tap(HOME) }
-            NavItem(Icons.Filled.Public, R.string.nav_federated, route == FEDERATED, compact, toggle) { tap(FEDERATED) }
+            NavItem(Icons.Filled.Image, R.string.nav_media, route == MEDIA, compact, toggle) { tap(MEDIA) }
             NavItem(Icons.Filled.Notifications, R.string.nav_notifications, route == NOTIFICATIONS, compact, toggle) {
                 tap(NOTIFICATIONS)
             }
@@ -669,6 +709,17 @@ private fun ListMenuTitle(
                 leadingIcon = { Icon(Icons.Filled.People, null, tint = PT.Link) },
                 onClick = { open = false; onSelect(LOCAL_FEED) },
             )
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        stringResource(R.string.title_federated),
+                        color = if (selectedId == FEDERATED_FEED) PT.TopBarText else PT.FgText,
+                        fontWeight = if (selectedId == FEDERATED_FEED) FontWeight.Bold else FontWeight.Normal,
+                    )
+                },
+                leadingIcon = { Icon(Icons.Filled.Public, null, tint = PT.Link) },
+                onClick = { open = false; onSelect(FEDERATED_FEED) },
+            )
             HorizontalDivider(color = PT.Border.copy(alpha = 0.5f))
             DropdownMenuItem(
                 enabled = false,
@@ -698,6 +749,25 @@ private fun ListMenuTitle(
             }
         }
     }
+}
+
+/** Kort forklaring av en side, fra info-ikonet øverst til høyre (Bilder, Matrix). */
+@Composable
+private fun InfoDialog(title: Int, text: Int, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.border(1.dp, PT.Border),
+        containerColor = PT.Fg,
+        title = {
+            Text(stringResource(title), color = PT.TopBarText, fontWeight = FontWeight.Bold)
+        },
+        text = { Text(stringResource(text), color = PT.Text) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.about_close), color = PT.Link)
+            }
+        },
+    )
 }
 
 private const val REPO_URL = "https://github.com/Gauteweb/Pleromastisk"
