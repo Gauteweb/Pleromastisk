@@ -306,9 +306,9 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
                     } else null,
                     actions = {
                         if (route == NOTIFICATIONS) entry?.let { NewNotificationsBadge(viewModel(it)) }
-                        if (route == HOME && selectedListId == LOCAL_FEED && state.isPleroma) {
-                            // «Om»-siden til instansen brukeren er logget inn på. Bare Pleroma har
-                            // panel.html og terms-of-service.html; ellers vises chat-ikonet som vanlig
+                        if (route == HOME && selectedListId == LOCAL_FEED) {
+                            // «Om»-siden til instansen brukeren er logget inn på: Pleromas panel.html og
+                            // tjenestevilkår, eller Mastodons beskrivelse og regler fra API-et
                             TextButton(onClick = { nav.navigate(INSTANCE_ABOUT) }) {
                                 Text(stringResource(R.string.instance_about_button), color = PT.TopBarText)
                             }
@@ -445,7 +445,7 @@ private fun MainScaffold(auth: AuthViewModel, state: AuthState, chat: ChatSessio
                     onOpenTag = { nav.navigate("tag/${Uri.encode(it)}") },
                 )
             }
-            composable(INSTANCE_ABOUT) { InstanceAboutScreen() }
+            composable(INSTANCE_ABOUT) { InstanceAboutScreen(state.isPleroma) }
             composable(CHAT) { ChatScreen(chat) }
             composable("tag/{tag}", arguments = listOf(navArgument("tag") { type = NavType.StringType })) { e ->
                 val tag = e.arguments?.getString("tag").orEmpty()

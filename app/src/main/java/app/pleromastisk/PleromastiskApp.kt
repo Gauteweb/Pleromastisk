@@ -2,6 +2,7 @@ package app.pleromastisk
 
 import android.app.Application
 import android.content.Context
+import android.os.Build
 import android.widget.Toast
 import androidx.annotation.StringRes
 import app.pleromastisk.data.ApiClient
@@ -10,6 +11,8 @@ import app.pleromastisk.data.Emoji
 import app.pleromastisk.data.SessionStore
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import coil.decode.VideoFrameDecoder
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.io.IOException
@@ -25,9 +28,15 @@ class PleromastiskApp : Application(), ImageLoaderFactory {
         Graph.init(this)
     }
 
-    /** Coil-oppsett: kan også hente et stillbilde fra videoer (forhåndsvisning i innlegg). */
+    /**
+     * Coil-oppsett: animerte GIF-er spilles av i loop (bilder, emojier og profilbilder), og
+     * stillbilder kan hentes fra videoer (forhåndsvisning i innlegg).
+     */
     override fun newImageLoader(): ImageLoader = ImageLoader.Builder(this)
-        .components { add(VideoFrameDecoder.Factory()) }
+        .components {
+            if (Build.VERSION.SDK_INT >= 28) add(ImageDecoderDecoder.Factory()) else add(GifDecoder.Factory())
+            add(VideoFrameDecoder.Factory())
+        }
         .build()
 }
 

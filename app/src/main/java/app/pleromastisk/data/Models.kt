@@ -64,11 +64,16 @@ data class MediaAttachment(
     val url: String = "",
     @SerialName("preview_url") val previewUrl: String? = null,
     val description: String? = null,
+    /** Opprinnelig adresse for vedlegg fra andre tjenere (Pleroma viser ellers en proxy-adresse). */
+    @SerialName("remote_url") val remoteUrl: String? = null,
     /** Rå `meta`-blokk (størrelse m.m.). Tolkes defensivt – formatet varierer mellom tjenere. */
     val meta: JsonElement? = null,
 ) {
     val isVisual: Boolean
-        get() = type == "image" || type == "video" || type == "gifv"
+        get() = type == "image" || isVideo
+
+    val isVideo: Boolean
+        get() = type == "video" || type == "gifv"
 
     /** Bredde/høyde-forhold hvis instansen oppgir det. */
     val aspectRatio: Float?
@@ -227,6 +232,10 @@ data class InstanceInfo(
     val title: String = "",
     /** Pleroma oppgir f.eks. «2.7.2 (compatible; Pleroma 2.6.3)». */
     val version: String = "",
+    /** Kort beskrivelse (Mastodon: ren tekst, GoToSocial: HTML). */
+    val description: String = "",
+    val email: String = "",
+    @SerialName("contact_account") val contactAccount: Account? = null,
     @SerialName("max_toot_chars") val maxTootChars: Int? = null,
     @SerialName("description_limit") val descriptionLimit: Int? = null,
     val configuration: InstanceConfig? = null,
@@ -235,6 +244,14 @@ data class InstanceInfo(
     /** Pleroma (eller en forgrening som Akkoma), ikke Mastodon e.l. */
     val isPleroma: Boolean get() = pleroma != null || "pleroma" in version.lowercase()
 }
+
+/** /api/v1/instance/extended_description (Mastodon 4+): den lange «Om»-teksten som HTML. */
+@Serializable
+data class ExtendedDescription(val content: String = "")
+
+/** Én serverregel fra /api/v1/instance/rules. [hint] er en valgfri utdypning. */
+@Serializable
+data class InstanceRule(val id: String = "", val text: String = "", val hint: String = "")
 
 @Serializable
 data class InstanceConfig(val statuses: StatusesConfig? = null)

@@ -1,6 +1,7 @@
 package app.pleromastisk.ui
 
 import android.content.Intent
+import android.text.TextUtils
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -26,17 +27,20 @@ import androidx.compose.ui.viewinterop.AndroidView
 import app.pleromastisk.Graph
 import app.pleromastisk.R
 import app.pleromastisk.userMessage
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * «Om»-siden til instansen brukeren er logget inn på, vist i appen (med vanlige menyer rundt).
- * Viser det samme som Pleroma-FE sin /about: panel-teksten og tjenestevilkårene.
+ * Pleroma: det samme som Pleroma-FE sin /about, altså panel-teksten og tjenestevilkårene.
+ * Ellers (Mastodon m.fl.): det samme som Mastodons /about, hentet fra API-et.
  */
 @Composable
-fun InstanceAboutScreen() {
+fun InstanceAboutScreen(pleroma: Boolean) {
     var attempt by remember { mutableIntStateOf(0) }
     val result by produceState<Result<List<String>>?>(null, attempt) {
         value = null
-        value = runCatching { Graph.api.instanceAboutHtml() }
+        value = runCatching { if (pleroma) Graph.api.instanceAboutHtml() else mastodonAbout() }
     }
 
     val r = result
@@ -80,6 +84,46 @@ private fun AboutWebView(sections: List<String>) {
         )
     }
 }
+
+/**
+ * Seksjonene på Mastodons /about: navn og kort beskrivelse, den lange beskrivelsen, serverreglene
+ * og hvem som administrerer instansen.
+ */
+private suspend fun mastodonAbout(): List<String> = coroutineScope {
+    val info = async { Graph.api.instanceInfo() }
+    val extended = async { Graph.api.extendedDescription() }
+    val rules = async { Graph.api.instanceRules() }
+    val i = info.await()
+    val long = extended.await().trim()
+    buildList {
+        val short = i.description.trim()
+        val intro = when {
+            short.isBlank() || short == long -> ""
+            '<' in short -> short
+            else -> "<p>${enc(short)}</p>"
+        }
+        val title = i.title.takeIf { it.isNotBlank() }?.let { "<h1>${enc(it)}</h1>" }.orEmpty()
+        if (title.isNotEmpty() || intro.isNotEmpty()) add(title + intro)
+        if (long.isNotBlank()) add(long)
+        rules.await().filter { it.text.isNotBlank() }.takeIf { it.isNotEmpty() }?.let { list ->
+            add(
+                "<h2>${enc(Graph.str(R.string.instance_about_rules))}</h2><ol>" +
+                    list.joinToString("") { r ->
+                        "<li>" + enc(r.text) + (if (r.hint.isNotBlank()) "<br><small>${enc(r.hint)}</small>" else "") + "</li>"
+                    } + "</ol>",
+            )
+        }
+        val admin = i.contactAccount?.takeIf { it.acct.isNotBlank() }
+            ?.let { "<a href=\"${enc(it.url)}\">@${enc(it.acct)}</a>" }
+        val mail = i.email.takeIf { it.isNotBlank() }?.let { "<a href=\"mailto:${enc(it)}\">${enc(it)}</a>" }
+        if (admin != null || mail != null) {
+            add("<h2>${enc(Graph.str(R.string.instance_about_contact))}</h2><p>" + listOfNotNull(admin, mail).joinToString("<br>") + "</p>")
+        }
+    }
+}
+
+/** Ren tekst trygt inn i HTML, med linjeskift bevart. */
+private fun enc(text: String) = TextUtils.htmlEncode(text).replace("\n", "<br>")
 
 private fun css(c: Color) = "#%06X".format(c.toArgb() and 0xFFFFFF)
 

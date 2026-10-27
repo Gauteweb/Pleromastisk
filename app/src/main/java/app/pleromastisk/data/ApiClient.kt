@@ -143,6 +143,16 @@ class ApiClient(private val store: SessionStore) {
             }?.let(::htmlBody)?.takeIf { it.isNotBlank() }
         }
 
+    /**
+     * Innholdet Mastodon viser på /about (der siden lages med JavaScript): den lange beskrivelsen og
+     * serverreglene. Endepunkter instansen ikke har (404 o.l.) gir tomt svar.
+     */
+    suspend fun extendedDescription(): String =
+        try { get<ExtendedDescription>("/api/v1/instance/extended_description").content } catch (e: ApiException) { "" }
+
+    suspend fun instanceRules(): List<InstanceRule> =
+        try { get("/api/v1/instance/rules") } catch (e: ApiException) { emptyList() }
+
     /** Plukker ut innholdet i `<body>` når siden er et helt HTML-dokument. */
     private fun htmlBody(html: String): String =
         Regex("(?is)<body[^>]*>(.*)</body>").find(html)?.groupValues?.get(1)?.trim() ?: html.trim()

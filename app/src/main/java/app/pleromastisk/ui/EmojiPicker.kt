@@ -104,7 +104,7 @@ fun EmojiPicker(onPick: (Emoji) -> Unit, modifier: Modifier = Modifier) {
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     AsyncImage(
-                                        model = e.staticUrl.ifBlank { e.url },
+                                        model = e.url.ifBlank { e.staticUrl },
                                         contentDescription = ":${e.shortcode}:",
                                         contentScale = ContentScale.Fit,
                                         modifier = Modifier.size(34.dp),

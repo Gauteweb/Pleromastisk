@@ -60,6 +60,8 @@
     </plurals>
     <string name="instance_about_title">About this instance</string>
     <string name="instance_about_empty">This instance has no “About” page.</string>
+    <string name="instance_about_rules">Server rules</string>
+    <string name="instance_about_contact">Administered by</string>
 
     <!-- Alt text and editing -->
     <string name="alt_title">Alt text</string>
@@ -124,6 +126,9 @@
     <string name="audio_attachment">Audio</string>
     <string name="video_attachment">Video</string>
     <string name="attachment_open">Open attachment</string>
+    <string name="video_play">Play video</string>
+    <string name="video_mute">Mute</string>
+    <string name="video_unmute">Unmute</string>
 
     <!-- Actions -->
     <string name="action_reply">Reply</string>

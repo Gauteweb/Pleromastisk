@@ -60,6 +60,8 @@
     </plurals>
     <string name="instance_about_title">Om instansen</string>
     <string name="instance_about_empty">Instansen har ingen «Om»-side.</string>
+    <string name="instance_about_rules">Serverregler</string>
+    <string name="instance_about_contact">Administrert av</string>
 
     <!-- Alt-tekst og redigering -->
     <string name="alt_title">Alt-tekst</string>
@@ -124,6 +126,9 @@
     <string name="audio_attachment">Lyd</string>
     <string name="video_attachment">Video</string>
     <string name="attachment_open">Åpne vedlegg</string>
+    <string name="video_play">Spill av video</string>
+    <string name="video_mute">Slå av lyd</string>
+    <string name="video_unmute">Slå på lyd</string>
 
     <!-- Handlinger -->
     <string name="action_reply">Svar</string>

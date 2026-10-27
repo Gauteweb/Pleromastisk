@@ -129,9 +129,16 @@ fun StatusCard(
     val appName = s.application?.name?.takeIf { it.isNotBlank() }
         ?: if (Graph.store.wasPostedHere(s.id)) Graph.str(R.string.app_name) else null
 
+    // Pleroma gjør lenkeforhåndsvisninger fra nyere Mastodon om til «unknown»-vedlegg som peker på
+    // nettsiden. Lenken står allerede i teksten, så slike vedlegg hoppes over.
+    val attachments = remember(s.mediaAttachments, s.content) {
+        s.mediaAttachments.filterNot { m ->
+            m.type == "unknown" && m.remoteUrl?.takeIf { it.isNotBlank() }?.let { s.content.contains(it) } == true
+        }
+    }
     val card = s.card?.takeIf {
         it.url.startsWith("http") && (it.title.isNotBlank() || !it.image.isNullOrBlank()) &&
-            s.mediaAttachments.isEmpty() && s.poll == null
+            attachments.isEmpty() && s.poll == null
     }
     val contentHtml = remember(s.content, card?.url) {
         if (card != null) stripCardLink(s.content, card.url) else s.content
@@ -217,7 +224,7 @@ fun StatusCard(
                         mentions = s.mentions,
                     )
                 }
-                MediaGrid(s.mediaAttachments, s.sensitive)
+                MediaGrid(attachments, s.sensitive)
                 s.poll?.let { PollView(s, it, actions) }
                 card?.let { LinkCard(it) }
             }
@@ -348,8 +355,18 @@ private fun MediaCarousel(items: List<MediaAttachment>, hiddenLabel: String?, on
         } else {
             HorizontalPager(pager, Modifier.fillMaxSize(), key = { items[it].id }) { page ->
                 val m = items[page]
-                Box(Modifier.fillMaxSize().clickable { open(m) }, contentAlignment = Alignment.Center) {
-                    val shown = mediaModel(m)
+                val shown = mediaModel(m)
+                if (m.isVideo) {
+                    Box(Modifier.fillMaxSize()) {
+                        InlineVideo(
+                            m, shown, crop = true,
+                            modifier = Modifier.fillMaxSize(),
+                            posterModifier = Modifier.fillMaxSize(),
+                            onPosterRatio = { if (page == 0 && m.aspectRatio == null) measured = it },
+                        )
+                        MediaOverlays(m)
+                    }
+                } else Box(Modifier.fillMaxSize().clickable { open(m) }, contentAlignment = Alignment.Center) {
                     if (shown != null) {
                         AsyncImage(
                             model = shown,
@@ -560,10 +577,10 @@ private fun mediaModel(m: MediaAttachment): Any? {
     }
 }
 
-/** Play-knapp for video og ALT-merke for bilder med alt-tekst, oppå selve bildet. */
+/** Play-knapp for vedlegg som åpnes i en annen app, og ALT-merke for vedlegg med alt-tekst. */
 @Composable
 private fun BoxScope.MediaOverlays(m: MediaAttachment) {
-    if (m.type != "image") {
+    if (m.type != "image" && !m.isVideo) {
         // Play-knapp på mørk, rund bakgrunn så den synes over både lyse og mørke bilder
         Icon(
             Icons.Filled.PlayArrow, stringResource(R.string.attachment_open),
@@ -588,7 +605,10 @@ private fun BoxScope.MediaOverlays(m: MediaAttachment) {
     }
 }
 
-/** Bilder åpnes i appens egen visning (med alt-tekst); video og annet åpnes i en annen app. */
+/**
+ * Bilder åpnes i appens egen visning (med alt-tekst); annet åpnes i en annen app.
+ * Video spilles av i feeden (se [InlineVideo]) og kommer ikke hit.
+ */
 @Composable
 private fun rememberMediaOpener(items: List<MediaAttachment>): (MediaAttachment) -> Unit {
     val openViewer = LocalImageViewer.current
@@ -608,10 +628,19 @@ private fun MediaTile(m: MediaAttachment, single: Boolean, onClick: () -> Unit, 
         modifier
             .background(PT.Fg)
             .border(1.dp, PT.Border)
-            .clickable(onClick = onClick),
+            .then(if (m.isVideo) Modifier else Modifier.clickable(onClick = onClick)),
         contentAlignment = Alignment.Center,
     ) {
-        if (shown != null) {
+        if (m.isVideo) {
+            // Uten oppgitt størrelse bestemmer forhåndsbildet høyden, som for bilder
+            InlineVideo(
+                m, shown, crop = false,
+                modifier = Modifier.fillMaxWidth(),
+                posterModifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (ratio != null) Modifier.aspectRatio(ratio) else Modifier.heightIn(min = 120.dp)),
+            )
+        } else if (shown != null) {
             AsyncImage(
                 model = shown,
                 contentDescription = m.description,
