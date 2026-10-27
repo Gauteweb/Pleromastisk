@@ -1,0 +1,4 @@
+- Animerte GIF-er spilles av i innlegg, emojier og profilbilder
+- Video spilles av rett i feeden
+- «Om»-knapp på «Lokal feed» også for Mastodon-instanser
+- Lenker fra Mastodon vises ikke lenger som tomme vedlegg på Pleroma

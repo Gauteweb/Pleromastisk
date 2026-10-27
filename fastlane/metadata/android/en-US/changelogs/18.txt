@@ -1,0 +1,4 @@
+- Animated GIFs play in posts, emojis and avatars
+- Videos play directly in the feed
+- About button on the local feed for Mastodon instances too
+- Links from Mastodon no longer show as empty attachments on Pleroma
