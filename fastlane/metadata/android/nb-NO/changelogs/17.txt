@@ -1,0 +1,2 @@
+- Bildene i «Bilder» fyller nå hele bredden, også fra Pleroma og for stående bilder
+- Innloggingen og «Om Pleromastisk» nevner nå Akkoma, GoToSocial og Mastodon

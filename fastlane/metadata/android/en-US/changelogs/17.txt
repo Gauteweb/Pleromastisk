@@ -1,0 +1,2 @@
+- Images in the Media tab now fill the full width, also from Pleroma and for portrait images
+- Login and About now mention Akkoma, GoToSocial and Mastodon
