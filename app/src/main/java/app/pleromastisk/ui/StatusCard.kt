@@ -320,8 +320,10 @@ private fun MediaCarousel(items: List<MediaAttachment>, hiddenLabel: String?, on
     if (items.isEmpty()) return
     var shownSensitive by rememberSaveable(items.first().id) { mutableStateOf(false) }
     val open = rememberMediaOpener(items)
+    // Pleroma oppgir ofte ikke størrelsen; da måles første bilde når det er lastet
+    var measured by rememberSaveable(items.first().id) { mutableStateOf<Float?>(null) }
     // Høyden følger første bilde, innenfor Instagrams grenser (4:5 til 1,91:1); resten tilpasses
-    val ratio = items.first().aspectRatio?.coerceIn(0.8f, 1.91f) ?: 1f
+    val ratio = (items.first().aspectRatio ?: measured)?.coerceIn(0.8f, 1.91f) ?: 1f
     val pager = rememberPagerState { items.size }
 
     Box(
@@ -352,8 +354,15 @@ private fun MediaCarousel(items: List<MediaAttachment>, hiddenLabel: String?, on
                         AsyncImage(
                             model = shown,
                             contentDescription = m.description,
-                            contentScale = ContentScale.Fit,
+                            // Fyller feltet helt; bilder utenfor 4:5–1,91:1 beskjæres som hos Instagram
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
+                            onSuccess = { state ->
+                                if (page == 0 && m.aspectRatio == null) {
+                                    val size = state.painter.intrinsicSize
+                                    if (size.width > 0f && size.height > 0f) measured = size.width / size.height
+                                }
+                            },
                         )
                     }
                     MediaOverlays(m)

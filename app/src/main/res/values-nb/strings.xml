@@ -23,7 +23,7 @@
     <string name="back">Tilbake</string>
 
     <!-- Innlogging -->
-    <string name="login_intro">Logg inn på en Pleroma-instans. Du sendes til instansens egen innloggingsside for å godkjenne appen – passordet ditt går aldri via Pleromastisk.</string>
+    <string name="login_intro">Logg inn på Pleroma, Akkoma, GoToSocial eller Mastodon. Du sendes til instansens egen innloggingsside for å godkjenne appen – passordet ditt går aldri via Pleromastisk.</string>
     <string name="instance_label">Instans</string>
     <string name="login_button">Logg inn</string>
     <string name="login_denied">Innloggingen ble avbrutt eller avvist.</string>
@@ -42,7 +42,7 @@
     <string name="chat_info_button">Om Matrix</string>
     <string name="chat_info_text">Her kan du logge på hvilken som helst Matrix-server, men du må ha opprettet en bruker først via nettleseren.\n\nDenne funksjonen leveres fra gaute.space med Matrix-klienten Cinny.</string>
     <string name="about_title">Om Pleromastisk</string>
-    <string name="about_p1">Denne appen er utviklet med Claude Code av Gaute Holmin for Pleroma Social, men den virker også for Mastodon og GoToSocial.</string>
+    <string name="about_p1">Denne appen er utviklet med Claude Code av Gaute Holmin for Pleroma Social, men den virker også for Akkoma, GoToSocial og Mastodon.</string>
     <string name="about_p3">Du kan laste ned kildekoden og videreutvikle appen selv fra</string>
     <string name="about_version">Versjon: %1$s</string>
     <string name="about_close">Lukk</string>
