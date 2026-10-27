@@ -5,8 +5,8 @@ utseende hentet fra Pleroma-temaet
 [gaute.space](https://gaute.space/forgejo/gaute/pleromathemes/src/branch/main/gautespace.json):
 skarpe hjørner, tynn tan kantlinje, mørke blågrønne flater og et eget bakgrunnsbilde.
 
-Appen er laget for [social.gaute.space](https://social.gaute.space), men skal fungere mot
-andre Pleroma-instanser (og i prinsippet andre tjenere med Mastodon-kompatibelt API).
+Appen er primært laget for [Pleroma Social](https://social.gaute.space), men virker også fint mot
+andre tjenere med Mastodon-kompatibelt API, som for eksempel Akkoma, GoToSocial og Mastodon.
 
 ## Skjermbilder
 
