@@ -53,9 +53,27 @@ data class Account(
     val bot: Boolean = false,
     val locked: Boolean = false,
     val fields: List<AccountField> = emptyList(),
+    /** Mastodon: roller instansen har valgt å vise på profilen. */
+    val roles: List<AccountRole> = emptyList(),
+    /** Pleroma/Akkoma: admin-/moderatorflagg (bare med hvis brukeren viser rollen sin). */
+    val pleroma: AccountPleroma? = null,
 ) {
     val name: String get() = displayName.ifBlank { username }
 }
+
+@Serializable
+data class AccountRole(
+    val id: String = "",
+    val name: String = "",
+    /** Hex-farge, f.eks. «#ff3838», eller tom. */
+    val color: String = "",
+)
+
+@Serializable
+data class AccountPleroma(
+    @SerialName("is_admin") val isAdmin: Boolean = false,
+    @SerialName("is_moderator") val isModerator: Boolean = false,
+)
 
 @Serializable
 data class MediaAttachment(

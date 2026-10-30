@@ -66,6 +66,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
@@ -520,6 +521,7 @@ fun AccountScreen(
                                 Text("@" + a.acct, color = PT.Muted, style = MaterialTheme.typography.bodySmall)
                             }
                         }
+                        RoleBadges(a)
                         if (a.note.isNotBlank()) {
                             Spacer(Modifier.height(10.dp))
                             RichText(a.note, a.emojis, style = MaterialTheme.typography.bodyMedium, color = PT.Text)
@@ -578,6 +580,39 @@ private fun Counter(value: Int, label: String) {
 }
 
 /** Tabell med profilens egne felt (metadata): navn til venstre, verdi (med lenker) til høyre. */
+/** Rollen brukeren har på instansen (admin, moderator e.l.), som innrammede bokser. */
+@Composable
+private fun RoleBadges(account: Account) {
+    // Mastodon sender navngitte roller; Pleroma/Akkoma bare admin-/moderatorflagg
+    val roles = account.roles.filter { it.name.isNotBlank() }.map { it.name to roleColor(it.color) }
+        .ifEmpty {
+            listOfNotNull(
+                account.pleroma?.takeIf { it.isAdmin }?.let { stringResource(R.string.profile_role_admin) to null },
+                account.pleroma?.takeIf { it.isModerator }?.let { stringResource(R.string.profile_role_moderator) to null },
+            )
+        }
+    if (roles.isEmpty()) return
+    Spacer(Modifier.height(10.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        roles.forEach { (name, color) ->
+            Text(
+                name,
+                color = color ?: PT.Text,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .border(1.dp, color ?: PT.Border)
+                    .background(PT.Bg.copy(alpha = 0.35f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+            )
+        }
+    }
+}
+
+/** «#rrggbb» → farge, ellers null (tom eller ugyldig verdi). */
+private fun roleColor(hex: String): Color? =
+    runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrNull()
+
 @Composable
 private fun FieldsTable(account: Account) {
     Column(Modifier.fillMaxWidth().border(1.dp, PT.Border.copy(alpha = 0.6f))) {

@@ -30,6 +30,19 @@ class ModelsTest {
         assertNull(json.decodeFromString<Status>(status(""","language":null""")).language)
     }
 
+    @Test fun leserRoller() {
+        val m = json.decodeFromString<Account>(
+            """{"id":"1","roles":[{"id":"3","name":"Owner","color":"#ff3838"}]}""",
+        )
+        assertEquals("Owner", m.roles.single().name)
+        assertEquals("#ff3838", m.roles.single().color)
+        val p = json.decodeFromString<Account>(
+            """{"id":"1","pleroma":{"is_admin":true,"is_moderator":null,"relationship":{}}}""",
+        )
+        assertEquals(true, p.pleroma?.isAdmin)
+        assertEquals(false, p.pleroma?.isModerator)
+    }
+
     @Test fun kontoUtenFeltGirTomListe() {
         assertEquals(0, json.decodeFromString<Account>("""{"id":"1"}""").fields.size)
     }
