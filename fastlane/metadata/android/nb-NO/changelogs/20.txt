@@ -1,0 +1,1 @@
+- Profilsiden viser brukerens rolle på instansen (f.eks. admin eller moderator)

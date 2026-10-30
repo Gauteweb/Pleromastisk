@@ -1,0 +1,1 @@
+- Profiles show the user's role on the instance (e.g. admin or moderator)
