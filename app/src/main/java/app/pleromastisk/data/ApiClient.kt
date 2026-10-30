@@ -310,7 +310,7 @@ class ApiClient(private val store: SessionStore) {
 
     companion object {
         const val REDIRECT_URI = "pleromastisk://oauth"
-        const val WEBSITE = "https://github.com/Gauteweb/Pleromastisk"
+        const val WEBSITE = "https://github.com/Gauteweb/Feditastic"
         const val SCOPES = "read write follow push"
     }
 }

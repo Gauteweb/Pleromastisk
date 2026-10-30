@@ -770,7 +770,7 @@ private fun InfoDialog(title: Int, text: Int, onDismiss: () -> Unit) {
     )
 }
 
-private const val REPO_URL = "https://github.com/Gauteweb/Pleromastisk"
+private const val REPO_URL = "https://github.com/Gauteweb/Feditastic"
 
 /** Infoboks som åpnes fra info-ikonet øverst til høyre på «Hjem». */
 @Composable
