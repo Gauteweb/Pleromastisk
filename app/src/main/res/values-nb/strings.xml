@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Norsk (bokmål). Brukes også for nynorsk og «no»: app/build.gradle.kts kopierer filen dit ved bygging. -->
 <resources>
-    <string name="app_name">Pleromastisk</string>
+    <string name="app_name">Feditastic</string>
 
     <!-- Navigasjon -->
     <string name="nav_home">Hjem</string>
@@ -23,7 +23,7 @@
     <string name="back">Tilbake</string>
 
     <!-- Innlogging -->
-    <string name="login_intro">Logg inn på Pleroma, Akkoma, GoToSocial eller Mastodon. Du sendes til instansens egen innloggingsside for å godkjenne appen – passordet ditt går aldri via Pleromastisk.</string>
+    <string name="login_intro">Logg inn på en instans i Fediverset. Du sendes til instansens egen innloggingsside for å godkjenne appen – passordet ditt går aldri via Feditastic.</string>
     <string name="instance_label">Instans</string>
     <string name="login_button">Logg inn</string>
     <string name="login_denied">Innloggingen ble avbrutt eller avvist.</string>
@@ -41,14 +41,14 @@
     <string name="title_chat">Matrix</string>
     <string name="chat_info_button">Om Matrix</string>
     <string name="chat_info_text">Her kan du logge på hvilken som helst Matrix-server, men du må ha opprettet en bruker først via nettleseren.\n\nDenne funksjonen leveres fra gaute.space med Matrix-klienten Cinny.</string>
-    <string name="about_title">Om Pleromastisk</string>
-    <string name="about_p1">Denne appen er utviklet med Claude Code av Gaute Holmin for Pleroma Social, men den virker også for Akkoma, GoToSocial og Mastodon.</string>
+    <string name="about_title">Om Feditastic</string>
+    <string name="about_p1">Denne appen er utviklet med Claude Code av Gaute Holmin for tjenester som Pleroma Social, Akkoma, GoToSocial og Mastodon.</string>
     <string name="about_p3">Du kan laste ned kildekoden og videreutvikle appen selv fra</string>
     <string name="about_version">Versjon: %1$s</string>
     <string name="about_close">Lukk</string>
     <string name="theme_button">Velg tema</string>
     <string name="theme_title">Tema</string>
-    <string name="theme_standard">Standard</string>
+    <string name="theme_green">Grønn</string>
     <string name="theme_blue">Blå</string>
     <string name="theme_purple">Lilla</string>
     <string name="theme_dark">Mørk</string>

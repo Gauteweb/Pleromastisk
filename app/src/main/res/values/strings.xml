@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- English. Used for every system language except Norwegian (see values-nb). -->
 <resources>
-    <string name="app_name">Pleromastisk</string>
+    <string name="app_name">Feditastic</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -23,7 +23,7 @@
     <string name="back">Back</string>
 
     <!-- Login -->
-    <string name="login_intro">Log in to Pleroma, Akkoma, GoToSocial or Mastodon. You will be sent to the instance\'s own login page to approve the app – your password never passes through Pleromastisk.</string>
+    <string name="login_intro">Log in to an instance in the Fediverse. You will be sent to the instance\'s own login page to approve the app – your password never passes through Feditastic.</string>
     <string name="instance_label">Instance</string>
     <string name="login_button">Log in</string>
     <string name="login_denied">The login was cancelled or denied.</string>
@@ -41,14 +41,14 @@
     <string name="title_chat">Matrix</string>
     <string name="chat_info_button">About Matrix</string>
     <string name="chat_info_text">Here you can log in to any Matrix server, but you must have created an account in the browser first.\n\nThis feature is provided by gaute.space with the Matrix client Cinny.</string>
-    <string name="about_title">About Pleromastisk</string>
-    <string name="about_p1">This app was developed with Claude Code by Gaute Holmin for Pleroma Social, but it also works with Akkoma, GoToSocial and Mastodon.</string>
+    <string name="about_title">About Feditastic</string>
+    <string name="about_p1">This app was developed with Claude Code by Gaute Holmin for services such as Pleroma Social, Akkoma, GoToSocial and Mastodon.</string>
     <string name="about_p3">You can download the source code and develop the app further yourself from</string>
     <string name="about_version">Version: %1$s</string>
     <string name="about_close">Close</string>
     <string name="theme_button">Choose theme</string>
     <string name="theme_title">Theme</string>
-    <string name="theme_standard">Standard</string>
+    <string name="theme_green">Green</string>
     <string name="theme_blue">Blue</string>
     <string name="theme_purple">Purple</string>
     <string name="theme_dark">Dark</string>

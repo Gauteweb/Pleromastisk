@@ -72,8 +72,8 @@ data class PtColors(
 /** Temaene brukeren kan velge mellom på profilsiden. [id] lagres, så den må ikke endres. */
 enum class AppTheme(val id: String, @StringRes val label: Int, val colors: PtColors) {
     /** Pleroma-temaet «gaute.space»: mørke blågrønne flater og tan kantlinje (#AB9977). */
-    STANDARD(
-        "standard", R.string.theme_standard,
+    GREEN(
+        "standard", R.string.theme_green,
         PtColors(
             bg = Color(0xFF203237), text = Color(0xFFC2D9D4), link = Color(0xFFAB9977),
             fg = Color(0xFF132B29), fgText = Color(0xFFB5D4CE),
@@ -129,7 +129,7 @@ enum class AppTheme(val id: String, @StringRes val label: Int, val colors: PtCol
     ;
 
     companion object {
-        fun fromId(id: String?): AppTheme = entries.firstOrNull { it.id == id } ?: STANDARD
+        fun fromId(id: String?): AppTheme = entries.firstOrNull { it.id == id } ?: DARK
     }
 }
 
@@ -138,7 +138,7 @@ enum class AppTheme(val id: String, @StringRes val label: Int, val colors: PtCol
  * med en gang brukeren bytter tema.
  */
 object PT {
-    var theme by mutableStateOf(AppTheme.STANDARD)
+    var theme by mutableStateOf(AppTheme.DARK)
 
     private val c: PtColors get() = theme.colors
 

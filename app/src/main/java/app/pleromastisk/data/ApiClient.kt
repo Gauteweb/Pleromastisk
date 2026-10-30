@@ -92,7 +92,7 @@ class ApiClient(private val store: SessionStore) {
 
     suspend fun registerApp(base: String): AppRegistration {
         val body = FormBody.Builder()
-            .add("client_name", "Pleromastisk")
+            .add("client_name", "Feditastic")
             .add("redirect_uris", REDIRECT_URI)
             .add("scopes", SCOPES)
             .add("website", WEBSITE)

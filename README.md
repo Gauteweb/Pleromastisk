@@ -1,12 +1,7 @@
-# Pleromastisk
+# Feditastic
 
-En Android-app for [Pleroma](https://pleroma.social)-instanser, med norsk og engelsk grensesnitt og et
-utseende hentet fra Pleroma-temaet
-[gaute.space](https://gaute.space/forgejo/gaute/pleromathemes/src/branch/main/gautespace.json):
-skarpe hjørner, tynn tan kantlinje, mørke blågrønne flater og et eget bakgrunnsbilde.
-
-Appen er primært laget for [Pleroma Social](https://social.gaute.space), men virker også fint mot
-andre tjenere med Mastodon-kompatibelt API, som for eksempel Akkoma, GoToSocial og Mastodon.
+Dette er en Android-klient for Fediverset. Den virker mot plattformer som for eksempel Pleroma Social,
+Akkoma, GoToSocial og Mastodon. Appen har norsk og engelsk grensesnitt.
 
 ## Skjermbilder
 
@@ -45,7 +40,7 @@ Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per 
 - Chat-ikonet på «Hjem» åpner «Matrix»: [chat.gaute.space](https://chat.gaute.space) i appen – Matrix-klienten
   [Cinny](https://cinny.in) med appens farger. Forbindelsen holdes i live når du bytter faner.
 - «Om»-knappen i lokal feed viser instansens «Om»-side og tjenestevilkår.
-- Fem fargetemaer i samme stil – Standard, Blå, Lilla, Mørk og Lys – velges med palett-knappen på «Profil».
+- Fem fargetemaer i samme stil – Mørk (standard), Grønn, Blå, Lilla og Lys – velges med palett-knappen på «Profil».
 - ⓘ på «Profil» viser informasjon om appen og lenke til kildekoden.
 
 ### Ikke med (ennå)
@@ -55,9 +50,9 @@ og avspilling av video i appen (åpnes i en annen app).
 
 ## Installere
 
-1. Last ned `Pleromastisk.apk` fra siden for utgivelser i dette repoet.
+1. Last ned `Feditastic.apk` fra siden for utgivelser i dette repoet.
 2. Tillat installasjon fra ukjente kilder for appen du åpner filen med.
-3. Åpne **Pleromastisk**, skriv inn instansen (f.eks. `social.gaute.space`) og trykk
+3. Åpne **Feditastic**, skriv inn instansen (f.eks. `social.gaute.space`) og trykk
    **Logg inn**. Godkjenn appen i nettleseren – du sendes automatisk tilbake til appen.
 
 Krever Android 8.0 (API 26) eller nyere.
@@ -113,7 +108,7 @@ nettleserlagring på enheten og er uavhengig av Pleroma-innloggingen.
 
 Copyright © 2026 Gaute Holmin
 
-Pleromastisk er fri programvare, lisensiert under
+Feditastic er fri programvare, lisensiert under
 [**GNU General Public License versjon 3 eller senere (GPL-3.0-or-later)**](https://www.gnu.org/licenses/gpl-3.0.html).
 Fullstendig tekst ligger i [`LICENSE`](LICENSE).
 

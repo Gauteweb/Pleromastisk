@@ -106,7 +106,7 @@ fun LoginScreen(auth: AuthViewModel, onCancel: (() -> Unit)? = null) {
     // Ved «Legg til bruker» kan man gå tilbake til brukeren man var logget inn som
     if (onCancel != null) BackHandler(onBack = onCancel)
     val context = LocalContext.current
-    var host by rememberSaveable { mutableStateOf("social.gaute.space") }
+    var host by rememberSaveable { mutableStateOf("") }
     val submit = { auth.login(host) { url -> openCustomTab(context, url) } }
 
     Column(

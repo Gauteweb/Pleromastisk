@@ -169,7 +169,7 @@ class SessionStore(context: Context) {
         LinkedHashSet(sp.getString("posted_ids", "").orEmpty().split(",").filter { it.isNotBlank() })
     }
 
-    /** Husker at dette innlegget ble postet fra Pleromastisk (vises som «via Pleromastisk»). */
+    /** Husker at dette innlegget ble postet fra appen (vises som «via Feditastic»). */
     @Synchronized
     fun rememberPosted(id: String) {
         postedHere.remove(id)

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Fargene er hentet fra Pleroma-temaet «gaute.space» -->
-    <color name="pt_bg">#203237</color>
+    <!-- Vindusbakgrunnen før appen tegnes: samme som standardtemaet (Mørk) -->
+    <color name="pt_bg">#1A1A1A</color>
     <color name="pt_fg">#132B29</color>
     <color name="ic_launcher_background">#132B29</color>
 </resources>
