@@ -1,0 +1,3 @@
+- Appen har fått nytt navn: Feditastic
+- Mørk er nå standardtemaet, og det gamle standardtemaet heter Grønn
+- Instansfeltet ved innlogging er tomt, så du kan skrive inn din egen instans
