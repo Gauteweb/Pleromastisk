@@ -7,7 +7,7 @@ Akkoma, GoToSocial og Mastodon. Appen har norsk og engelsk grensesnitt.
 
 Her er noen skjermbilder som eksempler på hvordan appen ser ut. Den finnes per nå kun for Android.
 
-![Eksempler](Pleromastisk_screenshots.jpg)
+![Eksempler](Feditastic_screenshots.jpg)
 
 ## Funksjoner
 
