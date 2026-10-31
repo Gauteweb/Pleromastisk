@@ -1,0 +1,2 @@
+- Innlegg postet fra Feditastic vises som «via Feditastic» (også for innlogginger fra før navnebyttet)
+- Profilen til automatiserte kontoer (boter) merkes med «Automatisert»

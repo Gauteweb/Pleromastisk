@@ -1,0 +1,2 @@
+- Posts made from Feditastic show "via Feditastic" (also for logins from before the rename)
+- Profiles of automated accounts (bots) are marked "Automated"
