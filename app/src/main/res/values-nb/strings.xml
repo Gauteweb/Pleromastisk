@@ -201,6 +201,7 @@
     <string name="profile_requested">Forespørsel sendt</string>
     <string name="profile_role_admin">Administrator</string>
     <string name="profile_role_moderator">Moderator</string>
+    <string name="profile_bot">Automatisert</string>
 
     <!-- Feil -->
     <string name="error_network">Fikk ikke kontakt med instansen. Sjekk nettverket og prøv igjen.</string>

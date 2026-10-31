@@ -190,7 +190,11 @@ data class Card(
 data class AppInfo(
     val name: String = "",
     val website: String? = null,
-)
+) {
+    /** Navnet som vises. Eldre innlogginger er registrert under appens gamle navn «Pleromastisk». */
+    val displayName: String
+        get() = if (name.trim().equals("Pleromastisk", ignoreCase = true)) "Feditastic" else name.trim()
+}
 
 /** Svar fra /api/v2/search. Emneknagger tolkes defensivt (objekter eller rene tekststrenger). */
 @Serializable

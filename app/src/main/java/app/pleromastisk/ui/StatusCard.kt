@@ -126,7 +126,7 @@ fun StatusCard(
 
     // Lenkeforhåndsvisning (laget av instansen). Vises ikke sammen med medier eller avstemning.
     // Avsender-app: serverens opplysning først, ellers appnavnet for innlegg postet herfra.
-    val appName = s.application?.name?.takeIf { it.isNotBlank() }
+    val appName = s.application?.displayName?.takeIf { it.isNotBlank() }
         ?: if (Graph.store.wasPostedHere(s.id)) Graph.str(R.string.app_name) else null
 
     // Pleroma gjør lenkeforhåndsvisninger fra nyere Mastodon om til «unknown»-vedlegg som peker på

@@ -43,6 +43,11 @@ class ModelsTest {
         assertEquals(false, p.pleroma?.isModerator)
     }
 
+    @Test fun leserBotFlagg() {
+        assertEquals(true, json.decodeFromString<Account>("""{"id":"1","bot":true}""").bot)
+        assertEquals(false, json.decodeFromString<Account>("""{"id":"1"}""").bot)
+    }
+
     @Test fun kontoUtenFeltGirTomListe() {
         assertEquals(0, json.decodeFromString<Account>("""{"id":"1"}""").fields.size)
     }
@@ -50,6 +55,8 @@ class ModelsTest {
     @Test fun leserAppNavn() {
         val s = json.decodeFromString<Status>(status(""","application":{"name":"Pleromastisk","website":"https://example.org"}"""))
         assertEquals("Pleromastisk", s.application?.name)
+        assertEquals("Feditastic", s.application?.displayName)
+        assertEquals("Tusky", AppInfo("Tusky").displayName)
         assertEquals(3, s.favouritesCount)
         assertEquals(2, s.reblogsCount)
     }

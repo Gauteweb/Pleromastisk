@@ -201,6 +201,7 @@
     <string name="profile_requested">Request sent</string>
     <string name="profile_role_admin">Admin</string>
     <string name="profile_role_moderator">Moderator</string>
+    <string name="profile_bot">Automated</string>
 
     <!-- Errors -->
     <string name="error_network">Could not reach the instance. Check your network and try again.</string>

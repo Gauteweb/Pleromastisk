@@ -580,7 +580,7 @@ private fun Counter(value: Int, label: String) {
 }
 
 /** Tabell med profilens egne felt (metadata): navn til venstre, verdi (med lenker) til høyre. */
-/** Rollen brukeren har på instansen (admin, moderator e.l.), som innrammede bokser. */
+/** Rollen brukeren har på instansen (admin, moderator e.l.) og om kontoen er automatisert, som innrammede bokser. */
 @Composable
 private fun RoleBadges(account: Account) {
     // Mastodon sender navngitte roller; Pleroma/Akkoma bare admin-/moderatorflagg
@@ -591,6 +591,8 @@ private fun RoleBadges(account: Account) {
                 account.pleroma?.takeIf { it.isModerator }?.let { stringResource(R.string.profile_role_moderator) to null },
             )
         }
+        // Automatisert konto (Mastodon «bot», Pleroma/Akkoma «Service»-aktør)
+        .let { if (account.bot) it + (stringResource(R.string.profile_bot) to null) else it }
     if (roles.isEmpty()) return
     Spacer(Modifier.height(10.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
